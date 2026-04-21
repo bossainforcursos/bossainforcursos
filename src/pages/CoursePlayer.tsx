@@ -38,36 +38,26 @@ export default function CoursePlayer() {
   const [progress, setProgress] = useState(0);
   const [watermarkPos, setWatermarkPos] = useState({ top: '20%', left: '20%' });
 
-  const getYoutubeUrl = (idOrUrl: string) => {
+  const getYoutubeId = (idOrUrl: string) => {
     if (!idOrUrl) return '';
     const trimmed = idOrUrl.trim();
-    
     let videoId = trimmed;
-    
-    // Suporte a múltiplos formatos de link (incluindo Shorts e Studio)
+
     if (trimmed.includes('v=')) {
-      // Link padrão: youtube.com/watch?v=ID
       videoId = trimmed.split('v=')[1].split('&')[0];
     } else if (trimmed.includes('youtu.be/')) {
-      // Link curto: youtu.be/ID
       videoId = trimmed.split('youtu.be/')[1].split('?')[0];
     } else if (trimmed.includes('youtube.com/embed/')) {
-      // Link embed: youtube.com/embed/ID
       videoId = trimmed.split('youtube.com/embed/')[1].split('?')[0];
     } else if (trimmed.includes('youtube.com/shorts/')) {
-      // Link Shorts: youtube.com/shorts/ID
       videoId = trimmed.split('youtube.com/shorts/')[1].split('?')[0];
     } else if (trimmed.includes('studio.youtube.com/video/')) {
-      // Link do YouTube Studio (área de edição)
       videoId = trimmed.split('video/')[1].split('/')[0];
     } else if (trimmed.includes('/')) {
-      // Tenta pegar a última parte do link como fallback
       const parts = trimmed.split('/');
       videoId = parts[parts.length - 1].split('?')[0];
     }
-    
-    // Retorna a URL padrão que o ReactPlayer entende melhor
-    return `https://www.youtube.com/watch?v=${videoId}`;
+    return videoId;
   };
 
   useEffect(() => {
@@ -89,7 +79,6 @@ export default function CoursePlayer() {
           const data = courseSnap.data() as Course;
           setCourse(data);
 
-          // Fetch Lessons
           const qAulas = query(collection(db, 'cursos', id, 'aulas'), orderBy('ordem', 'asc'));
           const snapAulas = await getDocs(qAulas);
           const fetchedAulas = snapAulas.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lesson));
@@ -97,20 +86,9 @@ export default function CoursePlayer() {
 
           if (fetchedAulas.length > 0) {
             setActiveLesson(fetchedAulas[0]);
-            setVideoUrl(getYoutubeUrl(fetchedAulas[0].videoUrl));
+            setVideoUrl(fetchedAulas[0].videoUrl);
           } else if (data.videoUrl) {
-            // Se não houver aulas, usa o vídeo principal do curso
-            setVideoUrl(getYoutubeUrl(data.videoUrl));
-          }
-
-          // Busca progresso de forma segura (não trava o player se falhar)
-          try {
-            const progressSnap = await getDoc(doc(db, 'progresso', `${user.uid}_${id}`));
-            if (progressSnap.exists()) {
-               setProgress(progressSnap.data().ultimaPosicao || 0);
-            }
-          } catch (pErr) {
-            console.warn("Erro ao buscar progresso:", pErr);
+            setVideoUrl(data.videoUrl);
           }
         }
       } catch (err) {
@@ -124,8 +102,7 @@ export default function CoursePlayer() {
 
   const selectLesson = (lesson: Lesson) => {
     setActiveLesson(lesson);
-    setVideoUrl(getYoutubeUrl(lesson.videoUrl));
-    // Scroll player into view on mobile
+    setVideoUrl(lesson.videoUrl);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -222,27 +199,13 @@ export default function CoursePlayer() {
            <div className="aspect-video w-full bg-black relative shadow-2xl group overflow-hidden">
               {videoUrl ? (
                 <div className="w-full h-full relative">
-                  <Player 
+                  <iframe
                     key={videoUrl}
-                    url={videoUrl}
-                    width="100%"
-                    height="100%"
-                    playing={true}
-                    controls
-                    onProgress={(state: any) => handleProgress(state)}
-                    config={{
-                      youtube: {
-                        playerVars: { 
-                          modestbranding: 1, 
-                          rel: 0,
-                          controls: 1,
-                          iv_load_policy: 3,
-                          playsinline: 1,
-                          origin: window.location.origin
-                        }
-                      }
-                    } as any}
-                  />
+                    src={`https://www.youtube.com/embed/${getYoutubeId(videoUrl)}?autoplay=1&rel=0&modestbranding=1&playsinline=1&showinfo=0`}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
                   
                   {/* Floating Watermark */}
                   <div 
