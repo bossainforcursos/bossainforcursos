@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account details and anti-sharing metadata",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "description": "User's email" },
+        "deviceId": { "type": "string", "description": "Unique identifier for the first logged-in device" },
+        "ativo": { "type": "boolean", "description": "If the account is active" },
+        "ultimoLogin": { "type": "string", "format": "date-time", "description": "Last login timestamp" },
+        "ip": { "type": "string", "description": "Last known IP address" },
+        "isAdmin": { "type": "boolean", "description": "Admin privileges flag" },
+        "currentSessionId": { "type": "string", "description": "Current active session token to prevent concurrent logins" }
+      },
+      "required": ["email", "ativo"]
+    },
+    "Curso": {
+      "title": "Course",
+      "description": "Information about available courses",
+      "type": "object",
+      "properties": {
+        "titulo": { "type": "string" },
+        "descricao": { "type": "string" },
+        "thumbUrl": { "type": "string" },
+        "videoUrl": { "type": "string", "description": "Path in Storage or external URL" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["titulo"]
+    },
+    "Aula": {
+      "title": "Lesson",
+      "description": "Individual lessons within a course",
+      "type": "object",
+      "properties": {
+        "titulo": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "ordem": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["titulo", "videoUrl", "ordem"]
+    },
+    "Acesso": {
+      "title": "Course Access",
+      "description": "Mapping of which users have access to which courses",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "cursoId": { "type": "string" },
+        "liberadoEm": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "cursoId"]
+    },
+    "Progresso": {
+      "title": "User Progress",
+      "description": "Tracks user progress in a specific course",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "cursoId": { "type": "string" },
+        "completado": { "type": "boolean" },
+        "ultimaPosicao": { "type": "number", "description": "Video timestamp in seconds" }
+      },
+      "required": ["userId", "cursoId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Private user profiles"
+    },
+    "/cursos/{cursoId}": {
+      "schema": "Curso",
+      "description": "Course content catalog"
+    },
+    "/cursos/{cursoId}/aulas/{aulaId}": {
+      "schema": "Aula",
+      "description": "Lessons within a course"
+    },
+    "/acessos/{acessoId}": {
+      "schema": "Acesso",
+      "description": "Course permissions lookup"
+    },
+    "/progresso/{progressoId}": {
+      "schema": "Progresso",
+      "description": "User learning tracking"
+    }
+  }
+}

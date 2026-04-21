@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    function isSignedIn() {
+      return isAuthed() && (request.auth.token.email == 'bossainfor@gmail.com' || request.auth.token.email_verified == true);
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'bossainfor@gmail.com' || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      );
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAuthedOwner(userId) {
+      return isAuthed() && request.auth.uid == userId;
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow get: if isAuthedOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      
+      function isValidUser(data) {
+        return data.email is string && 
+               data.email.size() <= 256 &&
+               (data.deviceId == null || (data.deviceId is string && data.deviceId.size() <= 128)) &&
+               data.ativo is bool &&
+               (data.ultimoLogin == null || data.ultimoLogin is string) &&
+               (data.isAdmin == null || data.isAdmin is bool);
+      }
+
+      allow create: if isAuthedOwner(userId) && 
+                      isValidUser(request.resource.data) &&
+                      request.resource.data.ativo == true;
+      
+      allow update: if (isOwner(userId) && 
+                      isValidUser(request.resource.data) &&
+                      request.resource.data.email == resource.data.email &&
+                      (
+                        // User updating their own session/device info
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deviceId', 'ultimoLogin', 'ip', 'currentSessionId']) ||
+                        // Owner auto-promotion (special case for bootstrap)
+                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isAdmin']) && request.auth.token.email == 'bossainfor@gmail.com')
+                      )) ||
+                      (isAdmin() && 
+                      isValidUser(request.resource.data) &&
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ativo', 'deviceId', 'isAdmin']));
+    }
+
+    // --- Courses Collection ---
+    match /cursos/{cursoId} {
+      allow read: if isSignedIn(); // Catalog is visible to all logged in
+      allow write: if isAdmin();
+
+      match /aulas/{aulaId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
+      }
+    }
+
+    // --- Access Rules ---
+    match /acessos/{acessoId} {
+      // User can only see their own access grants
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // --- Progress Tracking ---
+    match /progresso/{progressoId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create, update: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+    
+    // --- Admin list (Managed manually in console for bootstrap) ---
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Only manageable through firebase console/CLI
+    }
+  }
+}
