@@ -199,9 +199,12 @@ export default function CoursePlayer() {
            <div className="aspect-video w-full bg-black relative shadow-2xl group overflow-hidden">
               {videoUrl ? (
                 <div className="w-full h-full relative">
+                  {/* Escudo Invisível Superior - Bloqueia cliques no compartilhamento e título */}
+                  <div className="absolute top-0 left-0 w-full h-[60px] z-40 cursor-default bg-transparent"></div>
+                  
                   <iframe
                     key={videoUrl}
-                    src={`https://www.youtube.com/embed/${getYoutubeId(videoUrl)}?autoplay=1&rel=0&modestbranding=1&playsinline=1&showinfo=0`}
+                    src={`https://www.youtube.com/embed/${getYoutubeId(videoUrl)}?autoplay=1&rel=0&modestbranding=1&playsinline=1&showinfo=0&controls=1&disablekb=1`}
                     className="w-full h-full border-0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
