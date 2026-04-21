@@ -40,12 +40,13 @@ export default function CoursePlayer() {
 
   const getYoutubeUrl = (idOrUrl: string) => {
     if (!idOrUrl) return '';
+    const trimmed = idOrUrl.trim();
     // Se já for uma URL completa, retorna ela
-    if (idOrUrl.includes('youtube.com') || idOrUrl.includes('youtu.be')) {
-      return idOrUrl;
+    if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) {
+      return trimmed;
     }
-    // Se for apenas o ID, monta a URL
-    return `https://www.youtube.com/watch?v=${idOrUrl}`;
+    // Se for apenas o ID, monta a URL padrão do YouTube
+    return `https://www.youtube.com/watch?v=${trimmed}`;
   };
 
   useEffect(() => {
@@ -77,12 +78,22 @@ export default function CoursePlayer() {
             setActiveLesson(fetchedAulas[0]);
             setVideoUrl(getYoutubeUrl(fetchedAulas[0].videoUrl));
           } else if (data.videoUrl) {
-            // Fallback to course videoUrl if no lessons exist
+            // Se não houver aulas, usa o vídeo principal do curso
             setVideoUrl(getYoutubeUrl(data.videoUrl));
+          }
+
+          // Busca progresso de forma segura (não trava o player se falhar)
+          try {
+            const progressSnap = await getDoc(doc(db, 'progresso', `${user.uid}_${id}`));
+            if (progressSnap.exists()) {
+               setProgress(progressSnap.data().ultimaPosicao || 0);
+            }
+          } catch (pErr) {
+            console.warn("Erro ao buscar progresso:", pErr);
           }
         }
       } catch (err) {
-        console.error(err);
+        console.error("Erro ao carregar curso:", err);
       } finally {
         setLoading(false);
       }
@@ -191,10 +202,11 @@ export default function CoursePlayer() {
               {videoUrl ? (
                 <div className="w-full h-full relative">
                   <Player 
+                    key={videoUrl}
                     url={videoUrl}
                     width="100%"
                     height="100%"
-                    playing={false}
+                    playing={true}
                     controls
                     onProgress={(state: any) => handleProgress(state)}
                     config={{
