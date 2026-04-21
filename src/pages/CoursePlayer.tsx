@@ -44,16 +44,29 @@ export default function CoursePlayer() {
     
     let videoId = trimmed;
     
-    // Extrai o ID se for uma URL completa
+    // Suporte a múltiplos formatos de link (incluindo Shorts e Studio)
     if (trimmed.includes('v=')) {
+      // Link padrão: youtube.com/watch?v=ID
       videoId = trimmed.split('v=')[1].split('&')[0];
     } else if (trimmed.includes('youtu.be/')) {
+      // Link curto: youtu.be/ID
       videoId = trimmed.split('youtu.be/')[1].split('?')[0];
     } else if (trimmed.includes('youtube.com/embed/')) {
+      // Link embed: youtube.com/embed/ID
       videoId = trimmed.split('youtube.com/embed/')[1].split('?')[0];
+    } else if (trimmed.includes('youtube.com/shorts/')) {
+      // Link Shorts: youtube.com/shorts/ID
+      videoId = trimmed.split('youtube.com/shorts/')[1].split('?')[0];
+    } else if (trimmed.includes('studio.youtube.com/video/')) {
+      // Link do YouTube Studio (área de edição)
+      videoId = trimmed.split('video/')[1].split('/')[0];
+    } else if (trimmed.includes('/')) {
+      // Tenta pegar a última parte do link como fallback
+      const parts = trimmed.split('/');
+      videoId = parts[parts.length - 1].split('?')[0];
     }
     
-    // Retorna a URL padrão que o ReactPlayer entende melhor para YouTube
+    // Retorna a URL padrão que o ReactPlayer entende melhor
     return `https://www.youtube.com/watch?v=${videoId}`;
   };
 
