@@ -38,6 +38,16 @@ export default function CoursePlayer() {
   const [progress, setProgress] = useState(0);
   const [watermarkPos, setWatermarkPos] = useState({ top: '20%', left: '20%' });
 
+  const getYoutubeUrl = (idOrUrl: string) => {
+    if (!idOrUrl) return '';
+    // Se já for uma URL completa, retorna ela
+    if (idOrUrl.includes('youtube.com') || idOrUrl.includes('youtu.be')) {
+      return idOrUrl;
+    }
+    // Se for apenas o ID, monta a URL
+    return `https://www.youtube.com/watch?v=${idOrUrl}`;
+  };
+
   useEffect(() => {
     const checkAccessAndLoad = async () => {
       if (!id || !user) return;
@@ -65,15 +75,10 @@ export default function CoursePlayer() {
 
           if (fetchedAulas.length > 0) {
             setActiveLesson(fetchedAulas[0]);
-            setVideoUrl(fetchedAulas[0].videoUrl);
-          } else {
+            setVideoUrl(getYoutubeUrl(fetchedAulas[0].videoUrl));
+          } else if (data.videoUrl) {
             // Fallback to course videoUrl if no lessons exist
-            setVideoUrl(data.videoUrl);
-          }
-
-          const progressSnap = await getDoc(doc(db, 'progresso', `${user.uid}_${id}`));
-          if (progressSnap.exists()) {
-             setProgress(progressSnap.data().ultimaPosicao || 0);
+            setVideoUrl(getYoutubeUrl(data.videoUrl));
           }
         }
       } catch (err) {
@@ -87,7 +92,7 @@ export default function CoursePlayer() {
 
   const selectLesson = (lesson: Lesson) => {
     setActiveLesson(lesson);
-    setVideoUrl(lesson.videoUrl);
+    setVideoUrl(getYoutubeUrl(lesson.videoUrl));
     // Scroll player into view on mobile
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
