@@ -27,7 +27,7 @@ export default function Dashboard() {
       
       try {
         // 1. Fetch todos os cursos
-        const qCursos = collection(db, 'cursos');
+        const qCursos = query(collection(db, 'cursos'), orderBy('titulo', 'asc'));
         const snapCursos = await getDocs(qCursos);
         const fetchedCursos = snapCursos.docs.map(doc => ({
           id: doc.id,

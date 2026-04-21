@@ -112,7 +112,7 @@ export default function Admin() {
 
   const fetchCourses = async () => {
     try {
-      const q = collection(db, 'cursos');
+      const q = query(collection(db, 'cursos'), orderBy('titulo', 'asc'));
       const snap = await getDocs(q);
       const fetched = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course));
       setCourses(fetched);
