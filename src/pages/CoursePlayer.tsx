@@ -198,13 +198,22 @@ export default function CoursePlayer() {
         <main className="flex-1 overflow-y-auto hide-scrollbar bg-black/20">
            <div className="aspect-video w-full bg-black relative shadow-2xl group overflow-hidden">
               {videoUrl ? (
-                <div className="w-full h-full relative">
-                  {/* Escudo Invisível Superior - Bloqueia cliques no compartilhamento e título */}
-                  <div className="absolute top-0 left-0 w-full h-[60px] z-40 cursor-default bg-transparent"></div>
+                <div 
+                  className="w-full h-full relative"
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  {/* Escudo Superior: Bloqueia Título e Botão Partilhar do Topo */}
+                  <div className="absolute top-0 left-0 w-full h-[25%] z-40 bg-white/0 cursor-default"></div>
                   
+                  {/* Escudo Inferior Esquerdo: Bloqueia a Setinha de Partilhar do rodapé */}
+                  <div className="absolute bottom-0 left-[40px] w-[50px] h-[50px] z-40 bg-white/0 cursor-default"></div>
+                  
+                  {/* Escudo Inferior Direito: Bloqueia o Logo YouTube e link externo */}
+                  <div className="absolute bottom-0 right-0 w-[150px] h-[60px] z-40 bg-white/0 cursor-default"></div>
+
                   <iframe
                     key={videoUrl}
-                    src={`https://www.youtube.com/embed/${getYoutubeId(videoUrl)}?autoplay=1&rel=0&modestbranding=1&playsinline=1&showinfo=0&controls=1&disablekb=1`}
+                    src={`https://www.youtube.com/embed/${getYoutubeId(videoUrl)}?autoplay=1&rel=0&modestbranding=1&playsinline=1&showinfo=0&controls=1&disablekb=1&fs=1`}
                     className="w-full h-full border-0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
