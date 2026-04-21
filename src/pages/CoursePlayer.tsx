@@ -41,12 +41,20 @@ export default function CoursePlayer() {
   const getYoutubeUrl = (idOrUrl: string) => {
     if (!idOrUrl) return '';
     const trimmed = idOrUrl.trim();
-    // Se já for uma URL completa, retorna ela
-    if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) {
-      return trimmed;
+    
+    let videoId = trimmed;
+    
+    // Extrai o ID se for uma URL completa
+    if (trimmed.includes('v=')) {
+      videoId = trimmed.split('v=')[1].split('&')[0];
+    } else if (trimmed.includes('youtu.be/')) {
+      videoId = trimmed.split('youtu.be/')[1].split('?')[0];
+    } else if (trimmed.includes('youtube.com/embed/')) {
+      videoId = trimmed.split('youtube.com/embed/')[1].split('?')[0];
     }
-    // Se for apenas o ID, monta a URL padrão do YouTube
-    return `https://www.youtube.com/watch?v=${trimmed}`;
+    
+    // Retorna a URL padrão que o ReactPlayer entende melhor para YouTube
+    return `https://www.youtube.com/watch?v=${videoId}`;
   };
 
   useEffect(() => {
@@ -215,7 +223,9 @@ export default function CoursePlayer() {
                           modestbranding: 1, 
                           rel: 0,
                           controls: 1,
-                          iv_load_policy: 3
+                          iv_load_policy: 3,
+                          playsinline: 1,
+                          origin: window.location.origin
                         }
                       }
                     } as any}

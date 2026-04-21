@@ -51,6 +51,8 @@ interface Course {
   descricao: string;
   videoUrl: string;
   thumbUrl: string;
+  categoria: string;
+  ordem: number;
   createdAt: any;
 }
 
@@ -78,7 +80,9 @@ export default function Admin() {
     titulo: '',
     descricao: '',
     videoUrl: '',
-    thumbUrl: ''
+    thumbUrl: '',
+    categoria: 'Geral',
+    ordem: 1
   });
 
   // Access State
@@ -112,9 +116,14 @@ export default function Admin() {
 
   const fetchCourses = async () => {
     try {
-      const q = query(collection(db, 'cursos'), orderBy('titulo', 'asc'));
+      const q = query(collection(db, 'cursos'));
       const snap = await getDocs(q);
-      const fetched = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course));
+      const fetched = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course)).sort((a, b) => {
+        const ordemA = a.ordem ?? 999;
+        const ordemB = b.ordem ?? 999;
+        if (ordemA !== ordemB) return ordemA - ordemB;
+        return a.titulo.localeCompare(b.titulo);
+      });
       setCourses(fetched);
     } catch (err: any) { 
       console.error(err); 
@@ -161,7 +170,7 @@ export default function Admin() {
       }
       setShowCourseModal(false);
       setEditingCourse(null);
-      setCourseForm({ titulo: '', descricao: '', videoUrl: '', thumbUrl: '' });
+      setCourseForm({ titulo: '', descricao: '', videoUrl: '', thumbUrl: '', categoria: 'Geral', ordem: 1 });
       fetchCourses();
     } catch (err) { alert("Erro ao salvar curso."); }
   };
@@ -321,7 +330,7 @@ export default function Admin() {
               <button 
                 onClick={() => {
                   setEditingCourse(null);
-                  setCourseForm({ titulo: '', descricao: '', videoUrl: '', thumbUrl: '' });
+                  setCourseForm({ titulo: '', descricao: '', videoUrl: '', thumbUrl: '', categoria: 'Geral', ordem: courses.length + 1 });
                   setShowCourseModal(true);
                 }}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/20"
@@ -428,7 +437,9 @@ export default function Admin() {
                                   titulo: course.titulo,
                                   descricao: course.descricao,
                                   videoUrl: course.videoUrl,
-                                  thumbUrl: course.thumbUrl
+                                  thumbUrl: course.thumbUrl,
+                                  categoria: course.categoria || 'Geral',
+                                  ordem: course.ordem || 1
                                 });
                                 setShowCourseModal(true);
                               }}
@@ -446,7 +457,15 @@ export default function Admin() {
                         </div>
                         <div className="p-5 flex-1 flex flex-col">
                            <h3 className="text-white font-bold uppercase tracking-tight text-sm mb-2">{course.titulo}</h3>
-                           <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed flex-1">{course.descricao}</p>
+                        <div className="flex items-center gap-3 mt-1">
+                           <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/10">
+                             {course.categoria || 'Geral'}
+                           </span>
+                           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                             Ordem: {course.ordem || 1}
+                           </span>
+                        </div>
+                        <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed flex-1 mt-3">{course.descricao}</p>
                            <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
                               <span className="text-[10px] font-mono text-indigo-400">ID: {course.id.substring(0,8)}</span>
                               <div className="flex items-center gap-1 text-emerald-500 text-[10px] font-bold uppercase tracking-widest">
@@ -619,6 +638,29 @@ export default function Admin() {
                           onChange={(e) => setCourseForm({...courseForm, videoUrl: e.target.value})}
                           className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
                           placeholder="https://youtube.com/watch?v=..."
+                        />
+                      </div>
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Categoria</label>
+                        <input 
+                          required
+                          value={courseForm.categoria}
+                          onChange={(e) => setCourseForm({...courseForm, categoria: e.target.value})}
+                          className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
+                          placeholder="Ex: Design, Marketing, etc"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Ordem de Exibição</label>
+                        <input 
+                          type="number"
+                          required
+                          value={courseForm.ordem}
+                          onChange={(e) => setCourseForm({...courseForm, ordem: parseInt(e.target.value)})}
+                          className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
                         />
                       </div>
                    </div>

@@ -12,6 +12,8 @@ interface Course {
   titulo: string;
   descricao: string;
   thumbUrl: string;
+  categoria?: string;
+  ordem?: number;
 }
 
 export default function Dashboard() {
@@ -26,13 +28,18 @@ export default function Dashboard() {
       if (!user?.uid) return;
       
       try {
-        // 1. Fetch todos os cursos
-        const qCursos = query(collection(db, 'cursos'), orderBy('titulo', 'asc'));
+        // Fetch todos os cursos e ordena via JavaScript para incluir documentos sem o campo 'ordem'
+        const qCursos = query(collection(db, 'cursos'));
         const snapCursos = await getDocs(qCursos);
         const fetchedCursos = snapCursos.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        } as Course));
+        } as Course)).sort((a, b) => {
+          const ordemA = a.ordem ?? 999;
+          const ordemB = b.ordem ?? 999;
+          if (ordemA !== ordemB) return ordemA - ordemB;
+          return a.titulo.localeCompare(b.titulo);
+        });
         setCourses(fetchedCursos);
 
         // 2. Fetch acessos do usuário
@@ -134,57 +141,81 @@ export default function Dashboard() {
             <p className="text-slate-500 text-sm italic font-medium tracking-tight">Conteúdo exclusivo com proteção anti-pirataria.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {loading ? (
-              [1, 2, 3, 4, 5, 6].map((i) => (
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="aspect-video bg-white/5 rounded-xl animate-pulse border border-white/5"></div>
-              ))
-            ) : courses.length > 0 ? (
-              courses.map((course) => (
-                <motion.div 
-                  key={course.id}
-                  whileHover={{ y: userAccess.includes(course.id) || profile?.isAdmin ? -5 : 0 }}
-                  onClick={() => handleCourseClick(course.id)}
-                  className={cn(
-                    "glass-panel p-2 rounded-xl group cursor-pointer shadow-xl transition-all border-white/5",
-                    (userAccess.includes(course.id) || profile?.isAdmin) 
-                      ? "hover:border-indigo-500/30" 
-                      : "opacity-60 grayscale hover:grayscale-[0.5]"
-                  )}
-                >
-                  <div className="relative aspect-video rounded-lg overflow-hidden">
-                    <img 
-                      src={course.thumbUrl || `https://picsum.photos/seed/${course.id}/600/400`} 
-                      alt={course.titulo}
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[2px]">
-                       {(userAccess.includes(course.id) || profile?.isAdmin) ? (
-                         <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-600/40">
-                            <Play className="w-6 h-6 fill-current" />
-                         </div>
-                       ) : (
-                         <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white shadow-xl">
-                            <Lock className="w-6 h-6" />
-                         </div>
-                       )}
-                    </div>
+              ))}
+            </div>
+          ) : Object.keys(courses.reduce((acc, c) => {
+              const cat = c.categoria || 'Geral';
+              if (!acc[cat]) acc[cat] = [];
+              acc[cat].push(c);
+              return acc;
+            }, {} as Record<string, Course[]>)).length > 0 ? (
+            <div className="space-y-12">
+              {Object.entries(
+                courses.reduce((acc, c) => {
+                  const cat = c.categoria || 'Geral';
+                  if (!acc[cat]) acc[cat] = [];
+                  acc[cat].push(c);
+                  return acc;
+                }, {} as Record<string, Course[]>)
+              ).map(([categoria, items]) => (
+                <div key={categoria} className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <h3 className="text-sm font-black uppercase tracking-[0.3em] text-indigo-500 bg-indigo-500/5 px-4 py-1 rounded border border-indigo-500/10 inline-block">{categoria}</h3>
+                    <div className="flex-1 h-[1px] bg-white/5"></div>
                   </div>
-                  <div className="p-3">
-                    <div className="flex items-center justify-between mb-1">
-                       <h4 className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors uppercase tracking-tight">{course.titulo}</h4>
-                       {!(userAccess.includes(course.id) || profile?.isAdmin) && <Lock className="w-3 h-3 text-slate-500" />}
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">{course.descricao}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {items.map((course) => (
+                      <motion.div 
+                        key={course.id}
+                        whileHover={{ y: userAccess.includes(course.id) || profile?.isAdmin ? -5 : 0 }}
+                        onClick={() => handleCourseClick(course.id)}
+                        className={cn(
+                          "glass-panel p-2 rounded-xl group cursor-pointer shadow-xl transition-all border-white/5",
+                          (userAccess.includes(course.id) || profile?.isAdmin) 
+                            ? "hover:border-indigo-500/30" 
+                            : "opacity-60 grayscale hover:grayscale-[0.5]"
+                        )}
+                      >
+                        <div className="relative aspect-video rounded-lg overflow-hidden">
+                          <img 
+                            src={course.thumbUrl || `https://picsum.photos/seed/${course.id}/600/400`} 
+                            alt={course.titulo}
+                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[2px]">
+                             {(userAccess.includes(course.id) || profile?.isAdmin) ? (
+                               <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-600/40">
+                                  <Play className="w-6 h-6 fill-current" />
+                               </div>
+                             ) : (
+                               <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white shadow-xl">
+                                  <Lock className="w-6 h-6" />
+                               </div>
+                             )}
+                          </div>
+                        </div>
+                        <div className="p-3">
+                          <div className="flex items-center justify-between mb-1">
+                             <h4 className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors uppercase tracking-tight">{course.titulo}</h4>
+                             {!(userAccess.includes(course.id) || profile?.isAdmin) && <Lock className="w-3 h-3 text-slate-500" />}
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-1">{course.descricao}</p>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className="col-span-full py-20 text-center glass-panel rounded-2xl border-white/5 border-dashed">
-                <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-[10px] italic">Nenhum curso liberado em sua conta comercial.</p>
-              </div>
-            )}
-          </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-20 text-center glass-panel rounded-2xl border-white/5 border-dashed">
+              <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-[10px] italic">Nenhum curso liberado em sua conta comercial.</p>
+            </div>
+          )}
         </div>
       </main>
     </div>
