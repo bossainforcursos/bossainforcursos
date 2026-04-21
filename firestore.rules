@@ -20,23 +20,20 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && (
+      return isAuthed() && (
         request.auth.token.email == 'bossainfor@gmail.com' || 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true)
       );
     }
 
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    function isAuthedOwner(userId) {
       return isAuthed() && request.auth.uid == userId;
     }
 
     // --- Users Collection ---
     match /users/{userId} {
-      allow get: if isAuthedOwner(userId) || isAdmin();
+      allow get: if isAuthed() && (request.auth.uid == userId || isAdmin());
       allow list: if isAdmin();
       
       function isValidUser(data) {
@@ -48,18 +45,17 @@ service cloud.firestore {
                (data.isAdmin == null || data.isAdmin is bool);
       }
 
-      allow create: if isAuthedOwner(userId) && 
-                      isValidUser(request.resource.data) &&
-                      request.resource.data.ativo == true;
+      allow create: if isAuthed() && request.auth.uid == userId && isValidUser(request.resource.data);
       
-      allow update: if (isOwner(userId) && 
+      allow update: if (isAuthed() && request.auth.uid == userId && 
                       isValidUser(request.resource.data) &&
                       request.resource.data.email == resource.data.email &&
                       (
                         // User updating their own session/device info
                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deviceId', 'ultimoLogin', 'ip', 'currentSessionId']) ||
-                        // Owner auto-promotion (special case for bootstrap)
-                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isAdmin']) && request.auth.token.email == 'bossainfor@gmail.com')
+                        // Owner auto-promotion (special bootstrap)
+                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isAdmin']) && request.auth.token.email == 'bossainfor@gmail.com') ||
+                        isAdmin()
                       )) ||
                       (isAdmin() && 
                       isValidUser(request.resource.data) &&

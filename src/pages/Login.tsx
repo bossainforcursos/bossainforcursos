@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth, db } from '../lib/firebase';
 import { generateDeviceId } from '../lib/utils';
