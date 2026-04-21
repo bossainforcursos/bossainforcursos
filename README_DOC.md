@@ -1,4 +1,5 @@
-# CourseCore - Guia de Instalação e Configuração
+# Mestria Digital - Plataforma de Treinamentos
+Última modificação: 21/04/2026 às 17:58
 
 Esta plataforma foi construída com foco em segurança anti-compartilhamento de contas.
 
