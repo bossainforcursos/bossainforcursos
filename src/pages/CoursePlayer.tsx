@@ -38,6 +38,31 @@ export default function CoursePlayer() {
   const [progress, setProgress] = useState(0);
   const [watermarkPos, setWatermarkPos] = useState({ top: '20%', left: '20%' });
 
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const playerContainerRef = useRef<HTMLDivElement>(null);
+
+  const toggleFullScreen = () => {
+    if (!playerContainerRef.current) return;
+
+    if (!document.fullscreenElement) {
+      playerContainerRef.current.requestFullscreen().catch(err => {
+        console.error(`Erro ao entrar em tela cheia: ${err.message}`);
+      });
+      setIsFullScreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullScreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
   const getYoutubeId = (idOrUrl: string) => {
     if (!idOrUrl) return '';
     const trimmed = idOrUrl.trim();
@@ -196,29 +221,47 @@ export default function CoursePlayer() {
       <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden">
         {/* Main Content / Video */}
         <main className="flex-1 overflow-y-auto hide-scrollbar bg-black/20">
-           <div className="aspect-video w-full bg-black relative shadow-2xl group overflow-hidden">
+           <div 
+             ref={playerContainerRef}
+             className="aspect-video w-full bg-black relative shadow-2xl group overflow-hidden"
+             onContextMenu={(e) => e.preventDefault()}
+           >
               {videoUrl ? (
-                <div 
-                  className="w-full h-full relative"
-                  onContextMenu={(e) => e.preventDefault()}
-                >
+                <div className="w-full h-full relative">
                   {/* Escudo Superior: Bloqueia Título e Botão Partilhar do Topo */}
-                  <div className="absolute top-0 left-0 w-full h-[25%] z-40 bg-white/0 cursor-default"></div>
+                  <div className="absolute top-0 left-0 w-full h-[22%] z-40 bg-white/0 cursor-default"></div>
                   
-                  {/* Escudo Inferior Esquerdo: Bloqueia a Setinha de Partilhar do rodapé */}
-                  <div className="absolute bottom-0 left-[40px] w-[50px] h-[50px] z-40 bg-white/0 cursor-default"></div>
+                  {/* Escudo Lateral Esquerdo (Protege contra clicks acidentais no topo esquerdo) */}
+                  <div className="absolute top-0 left-0 w-[40%] h-[30%] z-40 bg-white/0 cursor-default"></div>
+
+                  {/* Escudo Inferior Esquerdo: Bloqueia a Setinha de Partilhar do rodapé e logo */}
+                  <div className="absolute bottom-0 left-0 w-[15%] h-[15%] z-40 bg-white/0 cursor-default"></div>
                   
                   {/* Escudo Inferior Direito: Bloqueia o Logo YouTube e link externo */}
-                  <div className="absolute bottom-0 right-0 w-[150px] h-[60px] z-40 bg-white/0 cursor-default"></div>
+                  <div className="absolute bottom-0 right-0 w-[25%] h-[15%] z-40 bg-white/0 cursor-default"></div>
 
                   <iframe
                     key={videoUrl}
-                    src={`https://www.youtube.com/embed/${getYoutubeId(videoUrl)}?autoplay=1&rel=0&modestbranding=1&playsinline=1&showinfo=0&controls=1&disablekb=1&fs=1`}
+                    src={`https://www.youtube.com/embed/${getYoutubeId(videoUrl)}?autoplay=1&rel=0&modestbranding=1&playsinline=1&showinfo=0&controls=1&disablekb=1&fs=0&iv_load_policy=3`}
                     className="w-full h-full border-0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
                   ></iframe>
                   
+                  {/* Botão de Tela Cheia Customizado (Mais seguro) */}
+                  <button 
+                    onClick={toggleFullScreen}
+                    className="absolute bottom-4 right-4 z-50 p-2 bg-black/60 hover:bg-black/80 rounded-lg border border-white/20 text-white/50 hover:text-white transition-all backdrop-blur-sm"
+                    title={isFullScreen ? "Sair da Tela Cheia" : "Tela Cheia de Cinema"}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      {isFullScreen ? (
+                        <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+                      ) : (
+                        <path d="M15 3h6v6M9 21H3v-6M21 15v6h-6M3 9V3h6"/>
+                      )}
+                    </svg>
+                  </button>
+
                   {/* Floating Watermark */}
                   <div 
                     className="absolute pointer-events-none transition-all duration-1000 z-50 select-none"
