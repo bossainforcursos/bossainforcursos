@@ -41,8 +41,8 @@ export default function Login() {
           throw new Error("Sua conta está desativada. Entre em contato com o suporte.");
         }
 
-        // 2. Anti-sharing check (Device Lock)
-        if (userData.deviceId && userData.deviceId !== deviceId) {
+        // 2. Anti-sharing check (Device Lock) - Skip for Admins
+        if (!userData.isAdmin && userData.deviceId && userData.deviceId !== deviceId) {
           await auth.signOut();
           throw new Error("Acesso bloqueado: Esta conta já está vinculada a outro dispositivo.");
         }

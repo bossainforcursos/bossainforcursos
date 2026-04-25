@@ -58,9 +58,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             setProfile(data);
             
-            // Check for concurrent login
+            // Check for concurrent login - Skip for Admins
             const storedSessionId = sessionStorage.getItem('sessionId');
-            if (data.currentSessionId && storedSessionId && data.currentSessionId !== storedSessionId) {
+            if (!data.isAdmin && data.currentSessionId && storedSessionId && data.currentSessionId !== storedSessionId) {
               setError("Sua conta foi acessada em outro navegador ou aba. A sessão anterior foi encerrada.");
               firebaseSignOut(auth);
             }
@@ -105,14 +105,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedSessionId = sessionStorage.getItem('sessionId');
 
       // 1. Device ID check
-      if (data.deviceId && data.deviceId !== deviceId) {
+      if (!data.isAdmin && data.deviceId && data.deviceId !== deviceId) {
         setError("Este dispositivo não está autorizado. Sua conta está vinculada a outro aparelho.");
         await logout();
         return false;
       }
 
       // 2. Session ID check
-      if (data.currentSessionId && storedSessionId && data.currentSessionId !== storedSessionId) {
+      if (!data.isAdmin && data.currentSessionId && storedSessionId && data.currentSessionId !== storedSessionId) {
         setError("Sessão expirada ou encerrada por novo login.");
         await logout();
         return false;
