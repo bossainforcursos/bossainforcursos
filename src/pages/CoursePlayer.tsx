@@ -197,23 +197,23 @@ export default function CoursePlayer() {
   return (
     <div className="min-h-screen bg-[#0f1115] text-slate-300 flex flex-col font-sans overflow-hidden">
       {/* Top Bar */}
-      <nav className="h-16 flex items-center justify-between px-8 glass-panel z-50">
+      <nav className="h-16 lg:h-16 flex items-center justify-between px-4 lg:px-8 glass-panel z-50">
         <button 
           onClick={() => navigate('/dashboard')}
           className="group flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-bold uppercase tracking-widest text-[10px]">Voltar ao Painel</span>
+          <span className="font-bold uppercase tracking-widest text-[9px] lg:text-[10px]">Voltar</span>
         </button>
         
-        <div className="flex items-center gap-4">
-           <div className="security-badge">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              Dispositivo Autorizado: <span className="font-mono ml-1">{profile?.deviceId || '...'}</span>
+        <div className="flex items-center gap-3 lg:gap-4">
+           <div className="security-badge py-1 text-[8px] lg:text-[10px]">
+              <div className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              <span className="truncate max-w-[100px] lg:max-w-none ml-1">🔒 {profile?.deviceId?.substring(0, 8) || '...'}</span>
            </div>
-           <div className="text-right hidden sm:block">
+           <div className="text-right hidden md:block">
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sessão Ativa</p>
-              <p className="text-[10px] font-mono text-indigo-400">ENCRYPTED_STREAM_V2</p>
+              <p className="text-[10px] font-mono text-indigo-400">SECURE_V2</p>
            </div>
         </div>
       </nav>
@@ -283,25 +283,25 @@ export default function CoursePlayer() {
               )}
            </div>
 
-           <div className="p-8 max-w-5xl">
-              <div className="flex items-center gap-3 mb-4">
-                 <span className="bg-indigo-600/20 text-indigo-400 text-[10px] font-bold uppercase px-2 py-1 rounded border border-indigo-500/20 tracking-widest">Módulo 01</span>
-                 <h1 className="text-2xl font-bold text-white uppercase tracking-tight">{course?.titulo}</h1>
+           <div className="p-4 lg:p-8 max-w-5xl">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
+                 <span className="w-fit bg-indigo-600/20 text-indigo-400 text-[9px] lg:text-[10px] font-bold uppercase px-2 py-1 rounded border border-indigo-500/20 tracking-widest">Aula Ativa</span>
+                 <h1 className="text-xl lg:text-2xl font-bold text-white uppercase tracking-tight line-clamp-2">{activeLesson?.titulo || course?.titulo}</h1>
               </div>
-              <p className="text-slate-400 leading-relaxed font-normal text-sm max-w-3xl">{course?.descricao}</p>
+              <p className="text-slate-400 leading-relaxed font-normal text-xs lg:text-sm max-w-3xl">{course?.descricao}</p>
               
-              <div className="grid grid-cols-3 gap-4 mt-12 pt-8 border-t border-white/5">
-                <div className="bg-white/5 p-4 rounded-lg border border-white/5">
-                  <div className="text-[10px] uppercase text-slate-500 mb-1 font-bold tracking-widest">Acesso</div>
-                  <div className="text-xl font-bold text-white uppercase tracking-tight">Liberado</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 lg:gap-4 mt-8 lg:mt-12 pt-6 lg:pt-8 border-t border-white/5">
+                <div className="bg-white/5 p-3 lg:p-4 rounded-lg border border-white/5">
+                  <div className="text-[9px] lg:text-[10px] uppercase text-slate-500 mb-0.5 font-bold tracking-widest">Acesso</div>
+                  <div className="text-lg lg:text-xl font-bold text-white uppercase tracking-tight">Liberado</div>
                 </div>
-                <div className="bg-white/5 p-4 rounded-lg border border-white/5">
-                  <div className="text-[10px] uppercase text-slate-500 mb-1 font-bold tracking-widest">Qualidade</div>
-                  <div className="text-xl font-bold text-white uppercase tracking-tight">4K HDR</div>
+                <div className="bg-white/5 p-3 lg:p-4 rounded-lg border border-white/5">
+                  <div className="text-[9px] lg:text-[10px] uppercase text-slate-500 mb-0.5 font-bold tracking-widest">Qualidade</div>
+                  <div className="text-lg lg:text-xl font-bold text-white uppercase tracking-tight">FULL HD</div>
                 </div>
-                <div className="bg-white/5 p-4 rounded-lg border border-white/5">
-                  <div className="text-[10px] uppercase text-slate-500 mb-1 font-bold tracking-widest">Status Proteção</div>
-                  <div className="text-xl font-bold text-emerald-500 uppercase tracking-tight">Ativo</div>
+                <div className="bg-white/5 p-3 lg:p-4 rounded-lg border border-white/5 col-span-2 sm:col-span-1">
+                  <div className="text-[9px] lg:text-[10px] uppercase text-slate-500 mb-0.5 font-bold tracking-widest">Proteção</div>
+                  <div className="text-lg lg:text-xl font-bold text-emerald-500 uppercase tracking-tight">Ativa</div>
                 </div>
               </div>
            </div>

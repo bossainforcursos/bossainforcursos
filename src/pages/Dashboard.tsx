@@ -3,8 +3,8 @@ import { collection, query, getDocs, orderBy, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { Play, LogOut, ShieldCheck, ChevronRight, Search, Bell, User, LayoutDashboard, Lock, ShieldAlert } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Play, LogOut, ShieldCheck, ChevronRight, Search, Bell, User, LayoutDashboard, Lock, ShieldAlert, Menu, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 
 interface Course {
@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [userAccess, setUserAccess] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -68,12 +69,33 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen w-screen text-slate-300 font-sans overflow-hidden">
+    <div className="flex h-screen w-screen text-slate-300 font-sans overflow-hidden relative">
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <aside className="w-64 border-r border-white/5 flex flex-col glass-panel shadow-2xl z-20">
-        <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-600/20">M</div>
-          <span className="text-white font-bold text-lg tracking-tight uppercase">MESTRIA<span className="text-indigo-500">DIGITAL</span></span>
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 w-64 border-r border-white/5 flex flex-col glass-panel shadow-2xl transition-transform duration-300 lg:relative lg:translate-x-0",
+        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="p-6 flex items-center justify-between lg:justify-start gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-600/20">M</div>
+            <span className="text-white font-bold text-lg tracking-tight uppercase">MESTRIA<span className="text-indigo-500">DIGITAL</span></span>
+          </div>
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         <nav className="flex-1 mt-4 px-3 space-y-1">
@@ -89,7 +111,7 @@ export default function Dashboard() {
 
           {profile?.isAdmin && (
             <div 
-              onClick={() => navigate('/admin')}
+              onClick={() => { navigate('/admin'); setIsSidebarOpen(false); }}
               className="p-3 rounded flex items-center gap-3 cursor-pointer hover:bg-indigo-600/10 transition-all text-indigo-400 hover:text-indigo-300 border border-transparent hover:border-indigo-500/30 group"
             >
               <ShieldAlert className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -120,25 +142,37 @@ export default function Dashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col bg-[#0f1115] relative overflow-hidden">
-        <header className="h-16 border-b border-white/5 flex items-center justify-between px-8 glass-panel z-10">
-          <div className="flex items-center gap-4">
-            <div className="security-badge">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              Dispositivo Autorizado: <span className="font-mono ml-1">{profile?.deviceId || 'Detectando...'}</span>
+      <main className="flex-1 flex flex-col bg-[#0f1115] relative overflow-hidden w-full">
+        <header className="h-20 lg:h-16 border-b border-white/5 flex flex-col lg:flex-row items-center justify-center lg:justify-between px-4 lg:px-8 glass-panel z-10 gap-2 py-2 lg:py-0">
+          <div className="flex items-center justify-between w-full lg:w-auto">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 -ml-2 lg:hidden text-slate-400 hover:text-white transition-colors"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            
+            <div className="security-badge py-1 text-[9px] lg:text-[10px]">
+              <div className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              <span className="truncate max-w-[150px] lg:max-w-none ml-1">
+                Acesso Seguro: <span className="font-mono text-indigo-400">{profile?.deviceId?.substring(0, 8) || 'Detectando...'}</span>
+              </span>
             </div>
+
+            <div className="w-8 lg:hidden"></div>
           </div>
-          <div className="flex items-center gap-6 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            <span>Sessão Protegida</span>
-            <Bell className="w-4 h-4 cursor-pointer hover:text-white transition-colors" />
-            <Search className="w-4 h-4 cursor-pointer hover:text-white transition-colors" />
+          
+          <div className="flex items-center gap-4 lg:gap-6 text-[9px] lg:text-[10px] font-bold uppercase tracking-widest text-slate-500 overflow-x-auto lg:overflow-visible w-full lg:w-auto justify-center lg:justify-end pb-1 lg:pb-0 hide-scrollbar">
+            <span className="whitespace-nowrap">Sessão Protegida</span>
+            <Bell className="w-3.5 h-3.5 lg:w-4 lg:h-4 cursor-pointer hover:text-white transition-colors" />
+            <Search className="w-3.5 h-3.5 lg:w-4 lg:h-4 cursor-pointer hover:text-white transition-colors" />
           </div>
         </header>
 
-        <div className="flex-1 p-8 overflow-y-auto hide-scrollbar">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-white mb-1 uppercase tracking-tight">Catálogo de Cursos</h2>
-            <p className="text-slate-500 text-sm italic font-medium tracking-tight">Conteúdo exclusivo com proteção anti-pirataria.</p>
+        <div className="flex-1 p-4 lg:p-8 overflow-y-auto hide-scrollbar">
+          <div className="mb-6 lg:mb-8">
+            <h2 className="text-xl lg:text-2xl font-bold text-white mb-1 uppercase tracking-tight">Catálogo de Cursos</h2>
+            <p className="text-slate-500 text-xs lg:text-sm italic font-medium tracking-tight">Conteúdo exclusivo com proteção anti-pirataria.</p>
           </div>
 
           {loading ? (

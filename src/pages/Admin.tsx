@@ -392,57 +392,57 @@ export default function Admin() {
                         <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 italic text-right">Controles</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {filteredUsers.map(user => (
-                        <tr key={user.id} className="hover:bg-white/2 transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col">
-                              <span className="text-white font-semibold text-sm">{user.email}</span>
-                              <span className="text-[10px] text-slate-500 uppercase font-medium tracking-tight">Login: {user.ultimoLogin ? new Date(user.ultimoLogin).toLocaleDateString() : 'N/A'}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            {user.ativo ? (
-                              <span className="text-emerald-500 text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/5 border border-emerald-500/10">Ativo</span>
-                            ) : (
-                              <span className="text-red-500 text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-red-500/5 border border-red-500/10">Bloqueado</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            {user.deviceId ? (
-                              <code className="bg-black/40 text-indigo-400 px-2 py-1 rounded text-[10px] font-mono border border-indigo-500/10">{user.deviceId}</code>
-                            ) : (
-                              <span className="text-slate-600 italic text-[10px]">Pendente...</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <button 
-                                onClick={() => openAccess(user)}
-                                className="p-2 glass-panel hover:bg-white/10 text-emerald-400 hover:text-white rounded-lg transition-all"
-                                title="Gerenciar Acessos"
-                              >
-                                <Lock className="w-3.5 h-3.5" />
-                              </button>
-                              <button 
-                                onClick={() => handleResetDevice(user.id)}
-                                className="p-2 glass-panel hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-all"
-                                title="Resetar Hardware ID"
-                              >
-                                <RefreshCcw className="w-3.5 h-3.5" />
-                              </button>
-                              <button 
-                                onClick={() => handleToggleActive(user)}
-                                className={`p-2 rounded-lg transition-all border ${user.ativo ? 'bg-red-500/5 border-red-500/10 text-red-500 hover:bg-red-500 hover:text-white' : 'bg-emerald-500/5 border-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white'}`}
-                                title={user.ativo ? 'Bloquear Usuário' : 'Desbloquear Usuário'}
-                              >
-                                {user.ativo ? <ShieldAlert className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
+                      <tbody className="divide-y divide-white/5">
+                        {filteredUsers.map(user => (
+                          <tr key={user.id} className="hover:bg-white/2 transition-colors">
+                            <td className="px-4 lg:px-6 py-4">
+                              <div className="flex flex-col">
+                                <span className="text-white font-semibold text-xs lg:text-sm truncate max-w-[120px] lg:max-w-none" title={user.email}>{user.email}</span>
+                                <span className="text-[9px] lg:text-[10px] text-slate-500 uppercase font-medium tracking-tight">Login: {user.ultimoLogin ? new Date(user.ultimoLogin).toLocaleDateString() : 'N/A'}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 lg:px-6 py-4">
+                              {user.ativo ? (
+                                <span className="text-emerald-500 text-[8px] lg:text-[10px] font-bold uppercase px-1.5 lg:py-0.5 rounded bg-emerald-500/5 border border-emerald-500/10">Ativo</span>
+                              ) : (
+                                <span className="text-red-500 text-[8px] lg:text-[10px] font-bold uppercase px-1.5 lg:py-0.5 rounded bg-red-500/5 border border-red-500/10">Block</span>
+                              )}
+                            </td>
+                            <td className="px-4 lg:px-6 py-4">
+                              {user.deviceId ? (
+                                <code className="bg-black/40 text-indigo-400 px-1.5 py-0.5 rounded text-[8px] lg:text-[10px] font-mono border border-indigo-500/10">{user.deviceId.substring(0, 6)}...</code>
+                              ) : (
+                                <span className="text-slate-600 italic text-[8px] lg:text-[10px]">Pendente</span>
+                              )}
+                            </td>
+                            <td className="px-4 lg:px-6 py-4 text-right">
+                              <div className="flex items-center justify-end gap-1 lg:gap-2">
+                                <button 
+                                  onClick={() => openAccess(user)}
+                                  className="p-1.5 lg:p-2 glass-panel hover:bg-white/10 text-emerald-400 hover:text-white rounded-lg transition-all"
+                                  title="Liberar Cursos"
+                                >
+                                  <CreditCard className="w-3.5 h-3.5" />
+                                </button>
+                                <button 
+                                  onClick={() => handleResetDevice(user.id)}
+                                  className="p-1.5 lg:p-2 glass-panel hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-all"
+                                  title="Resetar Device"
+                                >
+                                  <RefreshCcw className="w-3.5 h-3.5" />
+                                </button>
+                                <button 
+                                  onClick={() => handleToggleActive(user)}
+                                  className={`p-1.5 lg:p-2 rounded-lg transition-all border ${user.ativo ? 'bg-red-500/5 border-red-500/10 text-red-500 hover:bg-red-500 hover:text-white' : 'bg-emerald-500/5 border-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white'}`}
+                                  title={user.ativo ? 'Bloquear' : 'Desbloquear'}
+                                >
+                                  {user.ativo ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
                   </table>
                 </div>
               </div>
@@ -514,53 +514,53 @@ export default function Admin() {
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="glass-panel p-8 rounded-2xl shadow-2xl max-w-4xl mx-auto"
+                  className="glass-panel p-4 lg:p-8 rounded-2xl shadow-2xl max-w-4xl mx-auto"
                 >
-                  <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
-                     <div>
-                        <div className="flex items-center gap-2 text-indigo-400 mb-1">
+                  <div className="flex flex-col sm:flex-row items-center justify-between mb-6 lg:mb-8 gap-4">
+                     <div className="text-center sm:text-left">
+                        <div className="flex items-center justify-center sm:justify-start gap-2 text-indigo-400 mb-1">
                            <ArrowLeft className="w-4 h-4 cursor-pointer" onClick={() => setActiveTab('users')} />
-                           <span className="text-[10px] font-bold uppercase tracking-widest">Controle de Privilégios</span>
+                           <span className="text-[10px] font-bold uppercase tracking-widest">Liberar Acessos</span>
                         </div>
-                        <h2 className="text-xl lg:text-2xl font-bold text-white uppercase tracking-tighter">Gestão: {selectedUser.email}</h2>
+                        <h2 className="text-lg lg:text-2xl font-bold text-white uppercase tracking-tighter truncate max-w-[280px] lg:max-w-none">{selectedUser.email}</h2>
                      </div>
-                     <div className="bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase px-3 py-1 rounded-full border border-emerald-500/10 whitespace-nowrap">
-                        {userAccessList.length} Liberados
+                     <div className="bg-emerald-500/10 text-emerald-500 text-[9px] lg:text-[10px] font-bold uppercase px-3 py-1 rounded-full border border-emerald-500/10 whitespace-nowrap">
+                        {userAccessList.length} Treinamentos
                      </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 overflow-y-auto max-h-[50vh] lg:max-h-none pr-2 hide-scrollbar">
                      {courses.map(course => {
                         const hasAccess = userAccessList.includes(course.id);
                         return (
                           <div 
                             key={course.id}
                             onClick={() => toggleCourseAccess(course.id)}
-                            className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${hasAccess ? 'bg-indigo-600/10 border-indigo-500/30' : 'bg-white/5 border-white/5 hover:border-white/10'}`}
+                            className={`p-3 lg:p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${hasAccess ? 'bg-indigo-600/10 border-indigo-500/30' : 'bg-white/5 border-white/5 hover:border-white/10'}`}
                           >
-                             <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${hasAccess ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white/5 text-slate-600 group-hover:text-slate-400 transition-colors'}`}>
-                                   <CreditCard className="w-5 h-5" />
+                             <div className="flex items-center gap-3 lg:gap-4">
+                                <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center ${hasAccess ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white/5 text-slate-600 group-hover:text-slate-400 transition-colors'}`}>
+                                   <CreditCard className="w-4 h-4 lg:w-5 lg:h-5" />
                                 </div>
                                 <div>
-                                   <p className={`text-sm font-bold uppercase transition-colors ${hasAccess ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`}>{course.titulo}</p>
-                                   <p className="text-[10px] text-slate-500 uppercase tracking-widest">{hasAccess ? 'Acesso Vitalício' : 'Acesso Revogado'}</p>
+                                   <p className={`text-[11px] lg:text-sm font-bold uppercase transition-colors ${hasAccess ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`}>{course.titulo}</p>
+                                   <p className="text-[8px] lg:text-[10px] text-slate-500 uppercase tracking-widest">{hasAccess ? 'Liberado' : 'Bloqueado'}</p>
                                 </div>
                              </div>
-                             <div className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all ${hasAccess ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-white/10 text-transparent'}`}>
-                                <Check className="w-4 h-4" />
+                             <div className={`w-5 h-5 lg:w-6 lg:h-6 rounded-full flex items-center justify-center border transition-all ${hasAccess ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-white/10 text-transparent'}`}>
+                                <Check className="w-3 h-3 lg:w-4 lg:h-4" />
                              </div>
                           </div>
                         );
                      })}
                   </div>
                   
-                  <div className="mt-12 flex justify-end">
+                  <div className="mt-8 lg:mt-12 flex justify-center sm:justify-end">
                      <button 
                        onClick={() => setActiveTab('users')}
-                       className="px-8 py-3 bg-white text-black font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-slate-200 transition-all active:scale-95"
+                       className="w-full sm:w-auto px-8 py-3 bg-white text-black font-bold uppercase tracking-widest text-[9px] lg:text-[10px] rounded-xl hover:bg-slate-200 transition-all active:scale-95 shadow-xl"
                      >
-                       Concluir Alterações
+                       Confirmar Acessos
                      </button>
                   </div>
                 </motion.div>
