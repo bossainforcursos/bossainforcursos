@@ -26,6 +26,10 @@ export default function Login() {
 
       const deviceId = generateDeviceId();
       const sessionId = crypto.randomUUID();
+      
+      // Store session ID in sessionStorage before updating Firestore to prevent race conditions in snapshot listener
+      sessionStorage.setItem('sessionId', sessionId);
+      
       const userDocRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userDocRef);
 
@@ -40,6 +44,7 @@ export default function Login() {
         // 2. Anti-sharing check (Device Lock) - Skip for Admins
         if (!userData.isAdmin && userData.deviceId && userData.deviceId !== deviceId) {
           await auth.signOut();
+          sessionStorage.removeItem('sessionId');
           throw new Error("Acesso bloqueado: Esta conta já está vinculada a outro dispositivo.");
         }
 
@@ -62,7 +67,6 @@ export default function Login() {
         });
       }
 
-      sessionStorage.setItem('sessionId', sessionId);
       navigate('/dashboard');
     } catch (err: any) {
       console.error(err);

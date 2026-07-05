@@ -58,9 +58,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             setProfile(data);
             
-            // Check for concurrent login - Skip for Admins
+            // Check for concurrent login - Skip for Admins and auth pages
+            const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/register';
             const storedSessionId = sessionStorage.getItem('sessionId');
-            if (!data.isAdmin && data.currentSessionId && storedSessionId && data.currentSessionId !== storedSessionId) {
+            if (!isAuthPage && !data.isAdmin && data.currentSessionId && storedSessionId && data.currentSessionId !== storedSessionId) {
               setError("Sua conta foi acessada em outro navegador ou aba. A sessão anterior foi encerrada.");
               firebaseSignOut(auth);
             }
