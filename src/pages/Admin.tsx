@@ -177,9 +177,9 @@ export default function Admin() {
       
       alert("Aluno excluído com sucesso!");
       fetchUsers();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Erro ao excluir o aluno.");
+      alert("Erro ao excluir o aluno: " + (err.message || err));
     }
   };
 
@@ -309,8 +309,8 @@ export default function Admin() {
       `}>
         <div className="p-6 flex items-center justify-between lg:justify-start gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-600/20">M</div>
-            <span className="text-white font-bold text-lg tracking-tight uppercase">ADMIN<span className="text-indigo-500">MESTRIA</span></span>
+            <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-600/20">B</div>
+            <span className="text-white font-bold text-lg tracking-tight uppercase">BOSSA<span className="text-indigo-500"> ADMIN</span></span>
           </div>
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-white">
             <X className="w-5 h-5" />
@@ -362,7 +362,7 @@ export default function Admin() {
               <Menu className="w-6 h-6" />
             </button>
             <h1 className="text-sm lg:text-lg font-bold text-white uppercase tracking-tight truncate max-w-[200px] lg:max-w-none">
-              {activeTab === 'users' ? 'Alunos da Mestria' : activeTab === 'courses' ? 'Treinamentos Disponíveis' : 'Controles de Acesso'}
+              {activeTab === 'users' ? 'Alunos - Bossa Cursos' : activeTab === 'courses' ? 'Treinamentos Disponíveis' : 'Controles de Acesso'}
             </h1>
             <div className="w-8 lg:hidden"></div> {/* Placeholder for balance */}
           </div>

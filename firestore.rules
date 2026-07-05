@@ -77,7 +77,8 @@ service cloud.firestore {
     // --- Access Rules ---
     match /acessos/{acessoId} {
       // User can only see their own access grants
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isAdmin();
       allow write: if isAdmin();
     }
 

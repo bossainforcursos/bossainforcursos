@@ -98,8 +98,8 @@ export default function Register() {
         className="w-full max-w-md glass-panel p-8 rounded-2xl relative z-10"
       >
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 font-black text-2xl text-white shadow-lg shadow-indigo-600/20">M</div>
-          <h1 className="text-2xl font-bold text-white mb-1 tracking-tight uppercase">MESTRIA<span className="text-indigo-500">DIGITAL</span></h1>
+          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 font-black text-2xl text-white shadow-lg shadow-indigo-600/20">B</div>
+          <h1 className="text-2xl font-bold text-white mb-1 tracking-tight uppercase">BOSSA<span className="text-indigo-500"> CURSOS ON LINE</span></h1>
           <p className="text-slate-500 text-[10px] uppercase tracking-widest font-bold">Crie sua conta segura</p>
         </div>
 
