@@ -12,7 +12,7 @@ service cloud.firestore {
     }
 
     function isSignedIn() {
-      return isAuthed() && (request.auth.token.email == 'bossainfor@gmail.com' || request.auth.token.email_verified == true);
+      return isAuthed();
     }
     
     function isValidId(id) {
@@ -60,6 +60,8 @@ service cloud.firestore {
                       (isAdmin() && 
                       isValidUser(request.resource.data) &&
                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ativo', 'deviceId', 'isAdmin']));
+      
+      allow delete: if isAdmin();
     }
 
     // --- Courses Collection ---

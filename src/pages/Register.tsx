@@ -31,14 +31,17 @@ export default function Register() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Send verification email
-      await sendEmailVerification(user);
+      // Send verification email (non-blocking nice-to-have)
+      try {
+        await sendEmailVerification(user);
+      } catch (e) {
+        console.warn("Could not send email verification:", e);
+      }
 
-      // Create initial profile
-      const deviceId = generateDeviceId();
+      // Create initial profile without pre-locking device ID immediately (allows first login to set it)
       await setDoc(doc(db, 'users', user.uid), {
         email: user.email,
-        deviceId: deviceId, // Lock to registering device
+        deviceId: null,
         ativo: true,
         ultimoLogin: new Date().toISOString(),
         isAdmin: false
@@ -77,8 +80,8 @@ export default function Register() {
           </div>
           <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tighter">Conta Criada!</h2>
           <p className="text-zinc-400 mb-8 leading-relaxed">
-            Enviamos um link de verificação para seu e-mail.<br/> 
-            <b>Por favor, verifique sua caixa de entrada</b> para ativar seu acesso.
+            Sua conta foi criada com sucesso!<br/> 
+            <b>Você já pode acessar a plataforma</b> agora mesmo.
           </p>
           <Link to="/login" className="inline-block w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-xl transition-all uppercase tracking-tighter">
             Ir para Login

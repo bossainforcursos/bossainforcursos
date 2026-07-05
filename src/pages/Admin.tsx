@@ -159,6 +159,35 @@ export default function Admin() {
     } catch (err) { alert("Erro ao alterar status."); }
   };
 
+  const handleDeleteUser = async (userId: string, email: string) => {
+    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o aluno "${email}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      setLoading(true);
+      // Delete user accesses
+      const accessQ = query(collection(db, 'acessos'), where('userId', '==', userId));
+      const accessSnap = await getDocs(accessQ);
+      const deleteAccessPromises = accessSnap.docs.map(docSnap => deleteDoc(doc(db, 'acessos', docSnap.id)));
+      await Promise.all(deleteAccessPromises);
+
+      // Delete user progress
+      const progressQ = query(collection(db, 'progresso'), where('userId', '==', userId));
+      const progressSnap = await getDocs(progressQ);
+      const deleteProgressPromises = progressSnap.docs.map(docSnap => deleteDoc(doc(db, 'progresso', docSnap.id)));
+      await Promise.all(deleteProgressPromises);
+
+      // Delete user profile
+      await deleteDoc(doc(db, 'users', userId));
+
+      alert("Aluno excluído com sucesso!");
+      await fetchUsers();
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao excluir o aluno.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSaveCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -438,6 +467,15 @@ export default function Admin() {
                                 >
                                   {user.ativo ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                                 </button>
+                                {user.email !== 'bossainfor@gmail.com' && (
+                                  <button 
+                                    onClick={() => handleDeleteUser(user.id, user.email)}
+                                    className="p-1.5 lg:p-2 bg-red-500/5 border border-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all"
+                                    title="Excluir Aluno"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>

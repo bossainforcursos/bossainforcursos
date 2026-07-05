@@ -24,10 +24,6 @@ export default function Login() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      if (!user.emailVerified) {
-        throw new Error("Por favor, verifique seu e-mail antes de acessar a plataforma.");
-      }
-
       const deviceId = generateDeviceId();
       const sessionId = crypto.randomUUID();
       const userDocRef = doc(db, 'users', user.uid);
