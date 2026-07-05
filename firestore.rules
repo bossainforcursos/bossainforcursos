@@ -34,7 +34,7 @@ service cloud.firestore {
     // --- Users Collection ---
     match /users/{userId} {
       allow get: if isAuthed() && (request.auth.uid == userId || isAdmin());
-      allow list: if isAdmin();
+      allow list: if request.auth.token.email == 'bossainfor@gmail.com' || isAdmin();
       
       function isValidUser(data) {
         return data.email is string && 
@@ -78,13 +78,15 @@ service cloud.firestore {
     // --- Access Rules ---
     match /acessos/{acessoId} {
       // User can only see their own access grants
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if request.auth.token.email == 'bossainfor@gmail.com' || isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow write: if isAdmin();
     }
 
     // --- Progress Tracking ---
     match /progresso/{progressoId} {
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if request.auth.token.email == 'bossainfor@gmail.com' || isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow create, update: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow delete: if isAdmin();
     }

@@ -163,26 +163,35 @@ export default function Admin() {
     if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o aluno "${email}"? Esta ação não pode ser desfeita.`)) return;
     try {
       setLoading(true);
-      // Delete user accesses
-      const accessQ = query(collection(db, 'acessos'), where('userId', '==', userId));
-      const accessSnap = await getDocs(accessQ);
-      const deleteAccessPromises = accessSnap.docs.map(docSnap => deleteDoc(doc(db, 'acessos', docSnap.id)));
-      await Promise.all(deleteAccessPromises);
+      
+      // Delete user accesses (catch errors to avoid blocking)
+      try {
+        const accessQ = query(collection(db, 'acessos'), where('userId', '==', userId));
+        const accessSnap = await getDocs(accessQ);
+        const deleteAccessPromises = accessSnap.docs.map(docSnap => deleteDoc(doc(db, 'acessos', docSnap.id)));
+        await Promise.all(deleteAccessPromises);
+      } catch (e) {
+        console.warn("Could not delete user accesses:", e);
+      }
 
-      // Delete user progress
-      const progressQ = query(collection(db, 'progresso'), where('userId', '==', userId));
-      const progressSnap = await getDocs(progressQ);
-      const deleteProgressPromises = progressSnap.docs.map(docSnap => deleteDoc(doc(db, 'progresso', docSnap.id)));
-      await Promise.all(deleteProgressPromises);
+      // Delete user progress (catch errors to avoid blocking)
+      try {
+        const progressQ = query(collection(db, 'progresso'), where('userId', '==', userId));
+        const progressSnap = await getDocs(progressQ);
+        const deleteProgressPromises = progressSnap.docs.map(docSnap => deleteDoc(doc(db, 'progresso', docSnap.id)));
+        await Promise.all(deleteProgressPromises);
+      } catch (e) {
+        console.warn("Could not delete user progress:", e);
+      }
 
       // Delete user profile
       await deleteDoc(doc(db, 'users', userId));
 
       alert("Aluno excluído com sucesso!");
       await fetchUsers();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Erro ao excluir o aluno.");
+      alert("Erro ao excluir o aluno: " + (err?.message || err));
     } finally {
       setLoading(false);
     }
