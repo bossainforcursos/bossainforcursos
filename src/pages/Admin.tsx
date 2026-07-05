@@ -159,6 +159,30 @@ export default function Admin() {
     } catch (err) { alert("Erro ao alterar status."); }
   };
 
+  const handleDeleteUser = async (user: UserProfile) => {
+    if (user.isAdmin || user.email === 'bossainfor@gmail.com') {
+      alert("Você não pode excluir um administrador do sistema.");
+      return;
+    }
+    if (!confirm(`Tem certeza que deseja excluir permanentemente o aluno "${user.email}" e todos os seus acessos?`)) return;
+    try {
+      // 1. Delete associated course access documents
+      const q = query(collection(db, 'acessos'), where('userId', '==', user.id));
+      const snap = await getDocs(q);
+      const deletePromises = snap.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(deletePromises);
+
+      // 2. Delete the user profile document
+      await deleteDoc(doc(db, 'users', user.id));
+      
+      alert("Aluno excluído com sucesso!");
+      fetchUsers();
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao excluir o aluno.");
+    }
+  };
+
   const handleSaveCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -438,6 +462,15 @@ export default function Admin() {
                                 >
                                   {user.ativo ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                                 </button>
+                                {!user.isAdmin && user.email !== 'bossainfor@gmail.com' && (
+                                  <button 
+                                    onClick={() => handleDeleteUser(user)}
+                                    className="p-1.5 lg:p-2 glass-panel hover:bg-red-500/20 text-red-400 hover:text-red-200 rounded-lg transition-all border border-red-500/10"
+                                    title="Excluir Aluno"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>
