@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth, db } from '../lib/firebase';
@@ -31,9 +31,6 @@ export default function Register() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Send verification email
-      await sendEmailVerification(user);
-
       // Create initial profile
       const deviceId = generateDeviceId();
       await setDoc(doc(db, 'users', user.uid), {
@@ -45,7 +42,7 @@ export default function Register() {
       });
 
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 5000);
+      setTimeout(() => navigate('/login'), 2500);
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
@@ -77,8 +74,8 @@ export default function Register() {
           </div>
           <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tighter">Conta Criada!</h2>
           <p className="text-zinc-400 mb-8 leading-relaxed">
-            Enviamos um link de verificação para seu e-mail.<br/> 
-            <b>Por favor, verifique sua caixa de entrada</b> para ativar seu acesso.
+            Sua conta de aluno foi registrada com sucesso!<br/> 
+            Você já pode acessar todos os seus conteúdos.
           </p>
           <Link to="/login" className="inline-block w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-xl transition-all uppercase tracking-tighter">
             Ir para Login
