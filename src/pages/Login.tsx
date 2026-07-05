@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, getDocFromServer } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth, db } from '../lib/firebase';
-import { generateDeviceId } from '../lib/utils';
+import { generateDeviceId, safeUUID } from '../lib/utils';
 import { LogIn, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -19,18 +19,27 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    console.log("Login: Starting login process for email:", email);
 
     try {
+      console.log("Login: Attempting signInWithEmailAndPassword...");
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      console.log("Login: Authentication successful, user ID:", user.uid);
 
       const deviceId = generateDeviceId();
-      const sessionId = crypto.randomUUID();
+      const sessionId = safeUUID();
       const userDocRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userDocRef);
+      
+      console.log("Login: Fetching user profile from Firestore...");
+      const userSnap = await getDocFromServer(userDocRef).catch((err) => {
+        console.warn("Login: getDocFromServer failed, falling back to cached getDoc. Error:", err);
+        return getDoc(userDocRef);
+      });
 
       if (userSnap.exists()) {
         const userData = userSnap.data();
+        console.log("Login: User profile found in Firestore:", userData);
 
         // 1. Check if account is active
         if (userData.ativo === false) {
@@ -39,11 +48,13 @@ export default function Login() {
 
         // 2. Anti-sharing check (Device Lock) - Skip for Admins
         if (!userData.isAdmin && userData.deviceId && userData.deviceId !== deviceId) {
+          console.warn("Login: Device mismatch. userData.deviceId:", userData.deviceId, "current deviceId:", deviceId);
           await auth.signOut();
           throw new Error("Acesso bloqueado: Esta conta já está vinculada a outro dispositivo.");
         }
 
         // 3. Update device (if first time) and Session ID (force unique session)
+        console.log("Login: Updating session and device info in Firestore...");
         await updateDoc(userDocRef, {
           deviceId: userData.deviceId || deviceId,
           currentSessionId: sessionId,
@@ -51,6 +62,7 @@ export default function Login() {
           ip: "Detectado no servidor" 
         });
       } else {
+        console.log("Login: Profile missing, creating standard user profile...");
         // Heal: Create missing profile if auth exists but firestore doesn't
         await setDoc(userDocRef, {
           email: user.email,
@@ -62,10 +74,11 @@ export default function Login() {
         });
       }
 
+      console.log("Login: Setting local session ID and navigating to dashboard...");
       sessionStorage.setItem('sessionId', sessionId);
       navigate('/dashboard');
     } catch (err: any) {
-      console.error(err);
+      console.error("Login: Error during login process:", err);
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setError("E-mail ou senha incorretos.");
       } else {
