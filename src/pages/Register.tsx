@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth, db } from '../lib/firebase';
@@ -31,6 +31,9 @@ export default function Register() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Send verification email
+      await sendEmailVerification(user);
+
       // Create initial profile
       const deviceId = generateDeviceId();
       await setDoc(doc(db, 'users', user.uid), {
@@ -42,7 +45,7 @@ export default function Register() {
       });
 
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 2500);
+      setTimeout(() => navigate('/login'), 5000);
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
@@ -74,8 +77,8 @@ export default function Register() {
           </div>
           <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tighter">Conta Criada!</h2>
           <p className="text-zinc-400 mb-8 leading-relaxed">
-            Sua conta de aluno foi registrada com sucesso!<br/> 
-            Você já pode acessar todos os seus conteúdos.
+            Enviamos um link de verificação para seu e-mail.<br/> 
+            <b>Por favor, verifique sua caixa de entrada</b> para ativar seu acesso.
           </p>
           <Link to="/login" className="inline-block w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-xl transition-all uppercase tracking-tighter">
             Ir para Login
@@ -95,8 +98,8 @@ export default function Register() {
         className="w-full max-w-md glass-panel p-8 rounded-2xl relative z-10"
       >
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 font-black text-2xl text-white shadow-lg shadow-indigo-600/20">B</div>
-          <h1 className="text-2xl font-bold text-white mb-1 tracking-tight uppercase">BOSSA<span className="text-indigo-500"> CURSOS ON LINE</span></h1>
+          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 font-black text-2xl text-white shadow-lg shadow-indigo-600/20">M</div>
+          <h1 className="text-2xl font-bold text-white mb-1 tracking-tight uppercase">MESTRIA<span className="text-indigo-500">DIGITAL</span></h1>
           <p className="text-slate-500 text-[10px] uppercase tracking-widest font-bold">Crie sua conta segura</p>
         </div>
 

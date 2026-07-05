@@ -24,7 +24,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode, adminOnly?: boolean 
     return <Navigate to="/login" replace state={{ error }} />;
   }
 
-  if (!user) {
+  if (!user || (user && !user.emailVerified)) {
     return <Navigate to="/login" replace />;
   }
 

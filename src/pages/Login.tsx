@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { doc, getDoc, updateDoc, setDoc, getDocFromServer } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth, db } from '../lib/firebase';
-import { generateDeviceId, safeUUID } from '../lib/utils';
+import { generateDeviceId } from '../lib/utils';
 import { LogIn, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -19,27 +19,22 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    console.log("Login: Starting login process for email:", email);
 
     try {
-      console.log("Login: Attempting signInWithEmailAndPassword...");
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log("Login: Authentication successful, user ID:", user.uid);
+
+      if (!user.emailVerified) {
+        throw new Error("Por favor, verifique seu e-mail antes de acessar a plataforma.");
+      }
 
       const deviceId = generateDeviceId();
-      const sessionId = safeUUID();
+      const sessionId = crypto.randomUUID();
       const userDocRef = doc(db, 'users', user.uid);
-      
-      console.log("Login: Fetching user profile from Firestore...");
-      const userSnap = await getDocFromServer(userDocRef).catch((err) => {
-        console.warn("Login: getDocFromServer failed, falling back to cached getDoc. Error:", err);
-        return getDoc(userDocRef);
-      });
+      const userSnap = await getDoc(userDocRef);
 
       if (userSnap.exists()) {
         const userData = userSnap.data();
-        console.log("Login: User profile found in Firestore:", userData);
 
         // 1. Check if account is active
         if (userData.ativo === false) {
@@ -48,13 +43,11 @@ export default function Login() {
 
         // 2. Anti-sharing check (Device Lock) - Skip for Admins
         if (!userData.isAdmin && userData.deviceId && userData.deviceId !== deviceId) {
-          console.warn("Login: Device mismatch. userData.deviceId:", userData.deviceId, "current deviceId:", deviceId);
           await auth.signOut();
           throw new Error("Acesso bloqueado: Esta conta já está vinculada a outro dispositivo.");
         }
 
         // 3. Update device (if first time) and Session ID (force unique session)
-        console.log("Login: Updating session and device info in Firestore...");
         await updateDoc(userDocRef, {
           deviceId: userData.deviceId || deviceId,
           currentSessionId: sessionId,
@@ -62,7 +55,6 @@ export default function Login() {
           ip: "Detectado no servidor" 
         });
       } else {
-        console.log("Login: Profile missing, creating standard user profile...");
         // Heal: Create missing profile if auth exists but firestore doesn't
         await setDoc(userDocRef, {
           email: user.email,
@@ -74,11 +66,10 @@ export default function Login() {
         });
       }
 
-      console.log("Login: Setting local session ID and navigating to dashboard...");
       sessionStorage.setItem('sessionId', sessionId);
       navigate('/dashboard');
     } catch (err: any) {
-      console.error("Login: Error during login process:", err);
+      console.error(err);
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setError("E-mail ou senha incorretos.");
       } else {
@@ -113,8 +104,8 @@ export default function Login() {
         className="w-full max-w-md glass-panel p-8 rounded-2xl relative z-10 shadow-2xl"
       >
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 font-black text-2xl text-white shadow-lg shadow-indigo-600/20">B</div>
-          <h1 className="text-2xl font-bold text-white mb-1 tracking-tight uppercase">BOSSA<span className="text-indigo-500"> CURSOS ON LINE</span></h1>
+          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 font-black text-2xl text-white shadow-lg shadow-indigo-600/20">M</div>
+          <h1 className="text-2xl font-bold text-white mb-1 tracking-tight uppercase">MESTRIA<span className="text-indigo-500">DIGITAL</span></h1>
           <p className="text-slate-500 text-[10px] uppercase tracking-widest font-bold">Área de Membros Pro</p>
         </div>
 

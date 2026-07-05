@@ -90,8 +90,8 @@ export default function Dashboard() {
       )}>
         <div className="p-6 flex items-center justify-between lg:justify-start gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-600/20">B</div>
-            <span className="text-white font-bold text-lg tracking-tight uppercase">BOSSA<span className="text-indigo-500"> CURSOS ON LINE</span></span>
+            <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-600/20">M</div>
+            <span className="text-white font-bold text-lg tracking-tight uppercase">MESTRIA<span className="text-indigo-500">DIGITAL</span></span>
           </div>
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors">
             <X className="w-5 h-5" />

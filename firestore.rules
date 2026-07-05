@@ -12,7 +12,7 @@ service cloud.firestore {
     }
 
     function isSignedIn() {
-      return isAuthed();
+      return isAuthed() && (request.auth.token.email == 'bossainfor@gmail.com' || request.auth.token.email_verified == true);
     }
     
     function isValidId(id) {
@@ -46,7 +46,6 @@ service cloud.firestore {
       }
 
       allow create: if isAuthed() && request.auth.uid == userId && isValidUser(request.resource.data);
-      allow delete: if isAdmin();
       
       allow update: if (isAuthed() && request.auth.uid == userId && 
                       isValidUser(request.resource.data) &&

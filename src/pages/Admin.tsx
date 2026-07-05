@@ -159,30 +159,6 @@ export default function Admin() {
     } catch (err) { alert("Erro ao alterar status."); }
   };
 
-  const handleDeleteUser = async (user: UserProfile) => {
-    if (user.isAdmin || user.email === 'bossainfor@gmail.com') {
-      alert("Você não pode excluir um administrador do sistema.");
-      return;
-    }
-    if (!confirm(`Tem certeza que deseja excluir permanentemente o aluno "${user.email}" e todos os seus acessos?`)) return;
-    try {
-      // 1. Delete associated course access documents
-      const q = query(collection(db, 'acessos'), where('userId', '==', user.id));
-      const snap = await getDocs(q);
-      const deletePromises = snap.docs.map(d => deleteDoc(d.ref));
-      await Promise.all(deletePromises);
-
-      // 2. Delete the user profile document
-      await deleteDoc(doc(db, 'users', user.id));
-      
-      alert("Aluno excluído com sucesso!");
-      fetchUsers();
-    } catch (err: any) {
-      console.error(err);
-      alert("Erro ao excluir o aluno: " + (err.message || err));
-    }
-  };
-
   const handleSaveCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -309,8 +285,8 @@ export default function Admin() {
       `}>
         <div className="p-6 flex items-center justify-between lg:justify-start gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-600/20">B</div>
-            <span className="text-white font-bold text-lg tracking-tight uppercase">BOSSA<span className="text-indigo-500"> ADMIN</span></span>
+            <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-600/20">M</div>
+            <span className="text-white font-bold text-lg tracking-tight uppercase">ADMIN<span className="text-indigo-500">MESTRIA</span></span>
           </div>
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-white">
             <X className="w-5 h-5" />
@@ -362,7 +338,7 @@ export default function Admin() {
               <Menu className="w-6 h-6" />
             </button>
             <h1 className="text-sm lg:text-lg font-bold text-white uppercase tracking-tight truncate max-w-[200px] lg:max-w-none">
-              {activeTab === 'users' ? 'Alunos - Bossa Cursos' : activeTab === 'courses' ? 'Treinamentos Disponíveis' : 'Controles de Acesso'}
+              {activeTab === 'users' ? 'Alunos da Mestria' : activeTab === 'courses' ? 'Treinamentos Disponíveis' : 'Controles de Acesso'}
             </h1>
             <div className="w-8 lg:hidden"></div> {/* Placeholder for balance */}
           </div>
@@ -462,15 +438,6 @@ export default function Admin() {
                                 >
                                   {user.ativo ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                                 </button>
-                                {!user.isAdmin && user.email !== 'bossainfor@gmail.com' && (
-                                  <button 
-                                    onClick={() => handleDeleteUser(user)}
-                                    className="p-1.5 lg:p-2 glass-panel hover:bg-red-500/20 text-red-400 hover:text-red-200 rounded-lg transition-all border border-red-500/10"
-                                    title="Excluir Aluno"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
                               </div>
                             </td>
                           </tr>
