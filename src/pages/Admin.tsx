@@ -121,6 +121,18 @@ export default function Admin() {
     downloadLabel: ''
   });
 
+  // Keyboard shortcut ESC to close modals easily without zoom
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showCourseModal) setShowCourseModal(false);
+        if (showLessonModal) setShowLessonModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showCourseModal, showLessonModal]);
+
   const fetchUsers = async () => {
     try {
       const q = collection(db, 'users');
@@ -828,172 +840,214 @@ export default function Admin() {
       {/* Course Modal */}
       <AnimatePresence>
         {showCourseModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md overflow-hidden"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowCourseModal(false);
+            }}
+          >
              <motion.div 
-               initial={{ opacity: 0, scale: 0.9 }}
+               initial={{ opacity: 0, scale: 0.95 }}
                animate={{ opacity: 1, scale: 1 }}
-               exit={{ opacity: 0, scale: 0.9 }}
-               className="max-w-2xl w-full glass-panel rounded-2xl shadow-3xl overflow-hidden"
+               exit={{ opacity: 0, scale: 0.95 }}
+               className="max-w-2xl w-full bg-[#12151b] border border-white/10 rounded-2xl shadow-3xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[88vh] my-auto relative"
              >
-                <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/2">
-                   <h3 className="text-white font-bold uppercase tracking-widest text-xs">{editingCourse ? 'Editar Treinamento' : 'Novo Treinamento'}</h3>
-                   <button onClick={() => setShowCourseModal(false)} className="text-slate-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+                {/* Header Fixo no Topo */}
+                <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-slate-900/95 backdrop-blur-md shrink-0 z-20">
+                   <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                       {courseForm.tipo === 'software' ? <Laptop className="w-4 h-4 text-emerald-400" /> : <GraduationCap className="w-4 h-4 text-indigo-400" />}
+                     </div>
+                     <div>
+                       <h3 className="text-white font-bold uppercase tracking-wider text-xs sm:text-sm">
+                         {editingCourse ? 'Editar Treinamento / Software' : 'Novo Treinamento / Software'}
+                       </h3>
+                       <p className="text-[10px] text-slate-400">Preencha os campos e links de download</p>
+                     </div>
+                   </div>
+                   <button 
+                     type="button"
+                     onClick={() => setShowCourseModal(false)} 
+                     className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-all active:scale-95 flex items-center gap-1.5"
+                     title="Fechar janela (ESC)"
+                   >
+                     <span className="hidden sm:inline text-[11px] font-semibold text-slate-400">Fechar (ESC)</span>
+                     <X className="w-5 h-5" />
+                   </button>
                 </div>
-                <form onSubmit={handleSaveCourse} className="p-8 space-y-6">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2 md:col-span-2">
-                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest block">Tipo de Conteúdo</label>
-                        <div className="grid grid-cols-2 gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setCourseForm({ ...courseForm, tipo: 'curso' })}
-                            className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider transition-all ${
-                              courseForm.tipo === 'curso'
-                                ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30'
-                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
-                            }`}
-                          >
-                            <GraduationCap className="w-4 h-4" />
-                            🎓 Curso / Treinamento
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setCourseForm({ ...courseForm, tipo: 'software' })}
-                            className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider transition-all ${
-                              courseForm.tipo === 'software'
-                                ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-600/30'
-                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
-                            }`}
-                          >
-                            <Laptop className="w-4 h-4" />
-                            💻 Programa / Software
-                          </button>
+
+                {/* Corpo do Formulário com Rolagem Interna Responsiva */}
+                <form onSubmit={handleSaveCourse} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                   <div className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5 overflow-y-auto overscroll-contain flex-1">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                        <div className="space-y-2 md:col-span-2">
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block">Tipo de Conteúdo</label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setCourseForm({ ...courseForm, tipo: 'curso' })}
+                              className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                                courseForm.tipo === 'curso'
+                                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30'
+                                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              <GraduationCap className="w-4 h-4" />
+                              🎓 Curso / Treinamento
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCourseForm({ ...courseForm, tipo: 'software' })}
+                              className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                                courseForm.tipo === 'software'
+                                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-600/30'
+                                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              <Laptop className="w-4 h-4" />
+                              💻 Programa / Software
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Título do Item</label>
+                          <input 
+                            required
+                            value={courseForm.titulo}
+                            onChange={(e) => setCourseForm({...courseForm, titulo: e.target.value})}
+                            className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
+                            placeholder={courseForm.tipo === 'software' ? "Ex: Clonagem de Voz IA Pro" : "Ex: Criação de Comerciais"}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">URL do Vídeo (YouTube)</label>
+                          <input 
+                            required
+                            value={courseForm.videoUrl}
+                            onChange={(e) => setCourseForm({...courseForm, videoUrl: e.target.value})}
+                            className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
+                            placeholder="https://youtube.com/watch?v=..."
+                          />
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Título do Item</label>
-                        <input 
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Categoria</label>
+                          <input 
+                            required
+                            value={courseForm.categoria}
+                            onChange={(e) => setCourseForm({...courseForm, categoria: e.target.value})}
+                            className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
+                            placeholder={courseForm.tipo === 'software' ? "Ex: Softwares & IA" : "Ex: Design, Marketing, etc"}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Ordem de Exibição</label>
+                          <input 
+                            type="number"
+                            required
+                            value={courseForm.ordem}
+                            onChange={(e) => setCourseForm({...courseForm, ordem: parseInt(e.target.value) || 1})}
+                            className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Link Google Drive para Download */}
+                      <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/25 space-y-3">
+                        <div className="flex items-center gap-2 text-emerald-400">
+                          <Download className="w-4 h-4" />
+                          <span className="text-xs font-bold uppercase tracking-wider">Download de Arquivo / Programa (Google Drive)</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Link do Google Drive (ou link direto de download)</label>
+                          <input 
+                            value={courseForm.downloadUrl}
+                            onChange={(e) => setCourseForm({...courseForm, downloadUrl: e.target.value})}
+                            className="w-full bg-black/50 border border-emerald-500/40 p-3 rounded-xl text-white focus:border-emerald-400 outline-none transition-all text-sm font-mono placeholder:text-slate-600"
+                            placeholder="https://drive.google.com/file/d/... ou link de download"
+                          />
+                          <p className="text-[10px] text-slate-400 italic">O aluno verá o botão verde destacado para baixar o arquivo/instalador com 1 clique.</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Texto do Botão de Download (Opcional)</label>
+                          <input 
+                            value={courseForm.downloadLabel}
+                            onChange={(e) => setCourseForm({...courseForm, downloadLabel: e.target.value})}
+                            className="w-full bg-black/50 border border-white/10 p-3 rounded-xl text-white focus:border-emerald-400 outline-none transition-all text-sm placeholder:text-slate-600"
+                            placeholder={courseForm.tipo === 'software' ? "Ex: Baixar Instalador do Programa (Google Drive)" : "Ex: Baixar Arquivos do Treinamento"}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Link de Venda / WhatsApp para Vitrine */}
+                      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-amber-400">
+                            <ExternalLink className="w-4 h-4" />
+                            <span className="text-xs font-bold uppercase tracking-wider">Link de Venda / WhatsApp (Vitrine)</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setCourseForm({
+                              ...courseForm,
+                              buyUrl: `https://wa.me/5585992862177?text=${encodeURIComponent(`Olá! Gostaria de adquirir o acesso ao produto "${courseForm.titulo || 'Treinamento/Software'}".`)}`
+                            })}
+                            className="text-[10px] text-emerald-400 hover:text-emerald-300 underline font-bold uppercase tracking-wide transition-colors"
+                          >
+                            Usar WhatsApp (85) 99286-2177
+                          </button>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Link de Compra / WhatsApp (Para quem não adquiriu ainda)</label>
+                          <input 
+                            value={courseForm.buyUrl}
+                            onChange={(e) => setCourseForm({...courseForm, buyUrl: e.target.value})}
+                            className="w-full bg-black/50 border border-amber-500/40 p-3 rounded-xl text-white focus:border-amber-400 outline-none transition-all text-sm font-mono placeholder:text-slate-600"
+                            placeholder="https://wa.me/5585992862177?text=Quero%20adquirir..."
+                          />
+                          <p className="text-[10px] text-slate-400 italic">Contato padrão de vendas: WhatsApp (85) 99286-2177.</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Descrição</label>
+                        <textarea 
                           required
-                          value={courseForm.titulo}
-                          onChange={(e) => setCourseForm({...courseForm, titulo: e.target.value})}
+                          value={courseForm.descricao}
+                          onChange={(e) => setCourseForm({...courseForm, descricao: e.target.value})}
+                          className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm min-h-[90px]"
+                          placeholder="Conte um pouco sobre o curso ou software..."
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">URL da Thumbnail (Imagem de Capa)</label>
+                        <input 
+                          value={courseForm.thumbUrl}
+                          onChange={(e) => setCourseForm({...courseForm, thumbUrl: e.target.value})}
                           className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
-                          placeholder={courseForm.tipo === 'software' ? "Ex: Clonagem de Voz IA Pro" : "Ex: Criação de Comerciais"}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">URL do Vídeo (YouTube)</label>
-                        <input 
-                          required
-                          value={courseForm.videoUrl}
-                          onChange={(e) => setCourseForm({...courseForm, videoUrl: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
-                          placeholder="https://youtube.com/watch?v=..."
+                          placeholder="Link da imagem de capa..."
                         />
                       </div>
                    </div>
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Categoria</label>
-                        <input 
-                          required
-                          value={courseForm.categoria}
-                          onChange={(e) => setCourseForm({...courseForm, categoria: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
-                          placeholder={courseForm.tipo === 'software' ? "Ex: Softwares & IA" : "Ex: Design, Marketing, etc"}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Ordem de Exibição</label>
-                        <input 
-                          type="number"
-                          required
-                          value={courseForm.ordem}
-                          onChange={(e) => setCourseForm({...courseForm, ordem: parseInt(e.target.value) || 1})}
-                          className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
-                        />
-                      </div>
-                   </div>
-
-                   {/* Link Google Drive para Download */}
-                   <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
-                      <div className="flex items-center gap-2 text-emerald-400">
-                        <Download className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase tracking-wider">Download de Arquivo / Programa (Google Drive)</span>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Link do Google Drive (ou link direto de download)</label>
-                        <input 
-                          value={courseForm.downloadUrl}
-                          onChange={(e) => setCourseForm({...courseForm, downloadUrl: e.target.value})}
-                          className="w-full bg-black/40 border border-emerald-500/30 p-3 rounded-xl text-white focus:border-emerald-500 outline-none transition-all text-sm font-mono placeholder:text-slate-600"
-                          placeholder="https://drive.google.com/file/d/... ou link de download"
-                        />
-                        <p className="text-[10px] text-slate-500 italic">O aluno verá um botão destacado para baixar o arquivo/programa diretamente com 1 clique.</p>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Texto do Botão de Download (Opcional)</label>
-                        <input 
-                          value={courseForm.downloadLabel}
-                          onChange={(e) => setCourseForm({...courseForm, downloadLabel: e.target.value})}
-                          className="w-full bg-black/40 border border-white/10 p-3 rounded-xl text-white focus:border-emerald-500 outline-none transition-all text-sm placeholder:text-slate-600"
-                          placeholder={courseForm.tipo === 'software' ? "Ex: Baixar Instalador do Programa (Google Drive)" : "Ex: Baixar Arquivos do Treinamento"}
-                        />
-                      </div>
-                   </div>
-
-                   {/* Link de Venda / WhatsApp para Vitrine */}
-                   <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-3">
-                      <div className="flex items-center gap-2 text-amber-400">
-                        <ExternalLink className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase tracking-wider">Link de Venda / WhatsApp (Vitrine)</span>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Link de Compra / WhatsApp (Para quem não adquiriu ainda)</label>
-                        <input 
-                          value={courseForm.buyUrl}
-                          onChange={(e) => setCourseForm({...courseForm, buyUrl: e.target.value})}
-                          className="w-full bg-black/40 border border-amber-500/30 p-3 rounded-xl text-white focus:border-amber-500 outline-none transition-all text-sm font-mono placeholder:text-slate-600"
-                          placeholder="https://wa.me/5511999999999?text=Quero%20adquirir... ou checkout"
-                        />
-                        <p className="text-[10px] text-slate-500 italic">Se o aluno não tiver este produto liberado, ele poderá clicar em 'Adquirir / Saiba Mais' que abrirá este link.</p>
-                      </div>
-                   </div>
-
-                   <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Descrição</label>
-                      <textarea 
-                        required
-                        value={courseForm.descricao}
-                        onChange={(e) => setCourseForm({...courseForm, descricao: e.target.value})}
-                        className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm min-h-[100px]"
-                        placeholder="Conte um pouco sobre o curso ou software..."
-                      />
-                   </div>
-
-                   <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">URL da Thumbnail (Imagem de Capa)</label>
-                      <input 
-                        value={courseForm.thumbUrl}
-                        onChange={(e) => setCourseForm({...courseForm, thumbUrl: e.target.value})}
-                        className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
-                        placeholder="Link da imagem de capa..."
-                      />
-                   </div>
-
-                   <div className="pt-6 flex gap-3">
+                   {/* Rodapé Fixo com Botões Visíveis sem Precisar de Zoom */}
+                   <div className="p-4 sm:p-5 border-t border-white/10 bg-slate-900/95 backdrop-blur-md flex gap-3 shrink-0 z-20">
                       <button 
                         type="button"
                         onClick={() => setShowCourseModal(false)}
-                        className="flex-1 py-4 bg-zinc-800 text-white font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-zinc-700 transition-all"
+                        className="flex-1 py-3 sm:py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-widest text-[10px] sm:text-xs rounded-xl transition-all"
                       >
                         Cancelar
                       </button>
                       <button 
                         type="submit"
-                        className="flex-2 py-4 bg-indigo-600 text-white font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20"
+                        className="flex-2 py-3 sm:py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-widest text-[10px] sm:text-xs rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2"
                       >
+                        <Check className="w-4 h-4" />
                         {editingCourse ? 'Salvar Alterações' : 'Criar Item'}
                       </button>
                    </div>
@@ -1002,92 +1056,116 @@ export default function Admin() {
           </div>
         )}
       </AnimatePresence>
+
       {/* Lesson Modal */}
       <AnimatePresence>
         {showLessonModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-hidden"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowLessonModal(false);
+            }}
+          >
              <motion.div 
-               initial={{ opacity: 0, scale: 0.9 }}
+               initial={{ opacity: 0, scale: 0.95 }}
                animate={{ opacity: 1, scale: 1 }}
-               exit={{ opacity: 0, scale: 0.9 }}
-               className="max-w-md w-full glass-panel rounded-2xl shadow-3xl overflow-hidden"
+               exit={{ opacity: 0, scale: 0.95 }}
+               className="max-w-md w-full bg-[#12151b] border border-white/10 rounded-2xl shadow-3xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[88vh] my-auto relative"
              >
-                <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/2">
-                   <h3 className="text-white font-bold uppercase tracking-widest text-xs">{editingLesson ? 'Editar Aula' : 'Nova Aula'}</h3>
-                   <button onClick={() => setShowLessonModal(false)} className="text-slate-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+                {/* Header Fixo da Aula */}
+                <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-slate-900/95 backdrop-blur-md shrink-0 z-20">
+                   <div>
+                     <h3 className="text-white font-bold uppercase tracking-widest text-xs sm:text-sm">{editingLesson ? 'Editar Aula' : 'Nova Aula'}</h3>
+                     <p className="text-[10px] text-slate-400">Configuração do vídeo e arquivos</p>
+                   </div>
+                   <button 
+                     type="button"
+                     onClick={() => setShowLessonModal(false)} 
+                     className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-all active:scale-95 flex items-center gap-1"
+                     title="Fechar janela (ESC)"
+                   >
+                     <span className="hidden sm:inline text-[11px] font-semibold text-slate-400">Fechar (ESC)</span>
+                     <X className="w-5 h-5" />
+                   </button>
                 </div>
-                <form onSubmit={handleSaveLesson} className="p-8 space-y-6">
-                   <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Título da Aula</label>
-                      <input 
-                        required
-                        value={lessonForm.titulo}
-                        onChange={(e) => setLessonForm({...lessonForm, titulo: e.target.value})}
-                        className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
-                        placeholder="Ex: Aula 01 - Introdução"
-                      />
-                   </div>
 
-                   <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">ID do Vídeo (YouTube)</label>
-                      <input 
-                        required
-                        value={lessonForm.videoUrl}
-                        onChange={(e) => setLessonForm({...lessonForm, videoUrl: e.target.value})}
-                        className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
-                        placeholder="Ex: XXXXXXX (apenas o código)"
-                      />
-                   </div>
-
-                   <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Ordem de Exibição</label>
-                      <input 
-                        type="number"
-                        required
-                        value={lessonForm.ordem}
-                        onChange={(e) => setLessonForm({...lessonForm, ordem: parseInt(e.target.value) || 1})}
-                        className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
-                      />
-                   </div>
-
-                   {/* Link Google Drive para Download dos arquivos desta aula */}
-                   <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-3">
-                      <div className="flex items-center gap-2 text-emerald-400">
-                        <Download className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase tracking-wider">Download de Arquivo desta Aula (Google Drive)</span>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Link do Google Drive (Opcional)</label>
+                {/* Corpo do Formulário da Aula com Rolagem */}
+                <form onSubmit={handleSaveLesson} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                   <div className="p-4 sm:p-6 space-y-4 overflow-y-auto overscroll-contain flex-1">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Título da Aula</label>
                         <input 
-                          value={lessonForm.downloadUrl}
-                          onChange={(e) => setLessonForm({...lessonForm, downloadUrl: e.target.value})}
-                          className="w-full bg-black/40 border border-emerald-500/30 p-3 rounded-xl text-white focus:border-emerald-500 outline-none transition-all text-sm font-mono placeholder:text-slate-600"
-                          placeholder="https://drive.google.com/file/d/... ou link direto"
+                          required
+                          value={lessonForm.titulo}
+                          onChange={(e) => setLessonForm({...lessonForm, titulo: e.target.value})}
+                          className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
+                          placeholder="Ex: Aula 01 - Introdução"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Texto do Botão (Opcional)</label>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">URL ou Código do Vídeo (YouTube)</label>
                         <input 
-                          value={lessonForm.downloadLabel}
-                          onChange={(e) => setLessonForm({...lessonForm, downloadLabel: e.target.value})}
-                          className="w-full bg-black/40 border border-white/10 p-3 rounded-xl text-white focus:border-emerald-500 outline-none transition-all text-sm placeholder:text-slate-600"
-                          placeholder="Ex: Baixar Arquivos desta Aula"
+                          required
+                          value={lessonForm.videoUrl}
+                          onChange={(e) => setLessonForm({...lessonForm, videoUrl: e.target.value})}
+                          className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
+                          placeholder="https://youtube.com/watch?v=... ou código"
                         />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Ordem de Exibição</label>
+                        <input 
+                          type="number"
+                          required
+                          value={lessonForm.ordem}
+                          onChange={(e) => setLessonForm({...lessonForm, ordem: parseInt(e.target.value) || 1})}
+                          className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
+                        />
+                      </div>
+
+                      {/* Link Google Drive para Download dos arquivos desta aula */}
+                      <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/25 space-y-3">
+                        <div className="flex items-center gap-2 text-emerald-400">
+                          <Download className="w-4 h-4" />
+                          <span className="text-xs font-bold uppercase tracking-wider">Download desta Aula (Google Drive)</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Link do Google Drive (Opcional)</label>
+                          <input 
+                            value={lessonForm.downloadUrl}
+                            onChange={(e) => setLessonForm({...lessonForm, downloadUrl: e.target.value})}
+                            className="w-full bg-black/50 border border-emerald-500/40 p-3 rounded-xl text-white focus:border-emerald-400 outline-none transition-all text-sm font-mono placeholder:text-slate-600"
+                            placeholder="https://drive.google.com/file/d/... ou link direto"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Texto do Botão (Opcional)</label>
+                          <input 
+                            value={lessonForm.downloadLabel}
+                            onChange={(e) => setLessonForm({...lessonForm, downloadLabel: e.target.value})}
+                            className="w-full bg-black/50 border border-white/10 p-3 rounded-xl text-white focus:border-emerald-400 outline-none transition-all text-sm placeholder:text-slate-600"
+                            placeholder="Ex: Baixar Arquivos desta Aula"
+                          />
+                        </div>
                       </div>
                    </div>
 
-                   <div className="pt-6 flex gap-3">
+                   {/* Rodapé Fixo da Aula */}
+                   <div className="p-4 sm:p-5 border-t border-white/10 bg-slate-900/95 backdrop-blur-md flex gap-3 shrink-0 z-20">
                       <button 
                         type="button"
                         onClick={() => setShowLessonModal(false)}
-                        className="flex-1 py-4 bg-zinc-800 text-white font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-zinc-700 transition-all"
+                        className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-widest text-[10px] sm:text-xs rounded-xl transition-all"
                       >
                         Cancelar
                       </button>
                       <button 
                         type="submit"
-                        className="flex-2 py-4 bg-indigo-600 text-white font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20"
+                        className="flex-2 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-widest text-[10px] sm:text-xs rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2"
                       >
+                        <Check className="w-4 h-4" />
                         {editingLesson ? 'Salvar Aula' : 'Criar Aula'}
                       </button>
                    </div>

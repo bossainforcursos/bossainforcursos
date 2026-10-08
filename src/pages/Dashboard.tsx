@@ -24,7 +24,8 @@ import {
   CheckCircle2,
   FolderDown,
   Layers,
-  Check
+  Check,
+  Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -88,6 +89,17 @@ export default function Dashboard() {
     };
     fetchData();
   }, [user?.uid]);
+
+  // Close locked course modal on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && lockedModalCourse) {
+        setLockedModalCourse(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lockedModalCourse]);
 
   const handleCourseClick = (course: Course) => {
     if (userAccess.includes(course.id) || profile?.isAdmin) {
@@ -225,6 +237,24 @@ export default function Dashboard() {
           )}
         </nav>
 
+        {/* Contato WhatsApp de Vendas & Suporte */}
+        <div className="px-3 mb-2">
+          <a
+            href="https://wa.me/5585992862177?text=Olá!%20Gostaria%20de%20informações%20sobre%20os%20cursos%20e%20softwares."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2.5 p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-500/60 text-slate-200 transition-all group"
+          >
+            <div className="w-7 h-7 rounded-lg bg-emerald-600/30 text-emerald-400 flex items-center justify-center shrink-0">
+              <Phone className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[9px] font-bold uppercase tracking-widest text-emerald-400">WhatsApp de Vendas</div>
+              <div className="text-xs font-mono font-bold text-white truncate">(85) 99286-2177</div>
+            </div>
+          </a>
+        </div>
+
         <div className="p-6 mt-auto border-t border-white/5">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-white border border-white/10">
@@ -284,6 +314,18 @@ export default function Dashboard() {
                 </button>
               )}
             </div>
+
+            {/* Contato de Vendas WhatsApp */}
+            <a 
+              href="https://wa.me/5585992862177?text=Olá!%20Gostaria%20de%20comprar%20acesso%20a%20cursos%20ou%20softwares."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[10px] lg:text-[11px] font-bold uppercase tracking-wider transition-all whitespace-nowrap"
+              title="Falar no WhatsApp: (85) 99286-2177"
+            >
+              <Phone className="w-3 h-3" />
+              <span className="hidden sm:inline">Vendas:</span> <span>(85) 99286-2177</span>
+            </a>
 
             <div className="hidden sm:flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
               <span className="whitespace-nowrap">Sessão Segura</span>
@@ -501,90 +543,109 @@ export default function Dashboard() {
       {/* Modal Vitrine / Produto Bloqueado */}
       <AnimatePresence>
         {lockedModalCourse && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md overflow-hidden"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setLockedModalCourse(null);
+            }}
+          >
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="max-w-lg w-full glass-panel rounded-3xl shadow-3xl overflow-hidden border border-white/10"
+              className="max-w-lg w-full bg-[#12151b] border border-white/10 rounded-2xl sm:rounded-3xl shadow-3xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[88vh] my-auto relative"
             >
-              <div className="relative aspect-video">
+              {/* Top Banner & Botão Fechar em Destaque */}
+              <div className="relative aspect-video max-h-40 sm:max-h-48 shrink-0 overflow-hidden bg-black/50">
                 <img 
                   src={lockedModalCourse.thumbUrl || `https://picsum.photos/seed/${lockedModalCourse.id}/600/400`} 
                   alt={lockedModalCourse.titulo}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0f1115] via-black/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#12151b] via-[#12151b]/40 to-transparent"></div>
                 
+                {/* Botão Fechar Grande e Sempre Visível no Topo */}
                 <button 
                   onClick={() => setLockedModalCourse(null)}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-black/60 text-slate-400 hover:text-white transition-all backdrop-blur-sm"
+                  className="absolute top-3 right-3 p-2 sm:p-2.5 rounded-full bg-black/80 hover:bg-black text-slate-200 hover:text-white transition-all shadow-xl backdrop-blur-md active:scale-95 z-20 flex items-center gap-1 border border-white/10"
+                  title="Fechar (ESC)"
                 >
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-1 hidden sm:inline">Fechar</span>
                   <X className="w-5 h-5" />
                 </button>
 
-                <div className="absolute bottom-4 left-6 right-6">
-                  <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-md mb-2 inline-flex items-center gap-1 ${
+                <div className="absolute bottom-3 left-4 right-4 sm:left-6 sm:right-6">
+                  <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-md mb-1.5 inline-flex items-center gap-1 ${
                     lockedModalCourse.tipo === 'software' ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'
                   }`}>
                     {lockedModalCourse.tipo === 'software' ? <Laptop className="w-3 h-3" /> : <GraduationCap className="w-3 h-3" />}
                     {lockedModalCourse.tipo === 'software' ? 'Software & Ferramenta' : 'Curso & Treinamento'}
                   </span>
-                  <h3 className="text-xl font-black text-white uppercase tracking-tight">{lockedModalCourse.titulo}</h3>
+                  <h3 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight truncate">{lockedModalCourse.titulo}</h3>
                 </div>
               </div>
 
-              <div className="p-6 space-y-5">
+              {/* Conteúdo com Rolagem Interna Suave */}
+              <div className="p-4 sm:p-6 space-y-4 overflow-y-auto overscroll-contain flex-1">
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Sobre o Conteúdo</h4>
-                  <p className="text-sm text-slate-300 leading-relaxed">{lockedModalCourse.descricao}</p>
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Sobre o Conteúdo</h4>
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{lockedModalCourse.descricao}</p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-2.5">
+                <div className="p-3.5 sm:p-4 rounded-xl bg-white/5 border border-white/5 space-y-2">
                   <h5 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">O que está incluso:</h5>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-300">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Aulas em Vídeo HD
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" /> Aulas em Vídeo HD
                     </div>
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Acesso Seguro no Seu PC
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" /> Acesso Seguro no Seu PC
                     </div>
                     {lockedModalCourse.downloadUrl ? (
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Download Direto (Google Drive)
+                      <div className="flex items-center gap-2 text-emerald-300 font-medium">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" /> Download Direto (Google Drive)
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Materiais Exclusivos
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" /> Materiais Exclusivos
                       </div>
                     )}
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Suporte e Atualizações
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" /> Suporte & Atualizações
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                  <button 
-                    onClick={() => setLockedModalCourse(null)}
-                    className="py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold uppercase tracking-wider transition-all"
-                  >
-                    Voltar
-                  </button>
-
-                  <a 
-                    href={
-                      lockedModalCourse.buyUrl || 
-                      `https://wa.me/?text=${encodeURIComponent(`Olá! Tenho interesse em adquirir o acesso ao produto "${lockedModalCourse.titulo}". Como faço?`)}`
-                    }
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex-1 py-3.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl shadow-emerald-600/30"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    <span>Adquirir Acesso / Falar no WhatsApp</span>
-                  </a>
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-emerald-400">
+                    <Phone className="w-4 h-4" />
+                    <span className="text-[10px] uppercase font-bold tracking-wider">Contato Direto de Vendas</span>
+                  </div>
+                  <span className="font-mono text-xs font-bold text-white">(85) 99286-2177</span>
                 </div>
+              </div>
+
+              {/* Rodapé Fixo com Botões Visíveis Sem Zoom */}
+              <div className="p-4 sm:p-5 border-t border-white/10 bg-slate-900/95 backdrop-blur-md flex flex-col sm:flex-row gap-2.5 shrink-0 z-20">
+                <button 
+                  onClick={() => setLockedModalCourse(null)}
+                  className="py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold uppercase tracking-wider transition-all order-2 sm:order-1"
+                >
+                  Voltar
+                </button>
+
+                <a 
+                  href={
+                    lockedModalCourse.buyUrl || 
+                    `https://wa.me/5585992862177?text=${encodeURIComponent(`Olá! Tenho interesse em adquirir o acesso ao produto "${lockedModalCourse.titulo}". Como faço para comprar?`)}`
+                  }
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex-1 py-3.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl shadow-emerald-600/30 active:scale-95 order-1 sm:order-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>Adquirir no WhatsApp: (85) 99286-2177</span>
+                </a>
               </div>
             </motion.div>
           </div>

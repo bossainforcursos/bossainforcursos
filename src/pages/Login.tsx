@@ -4,7 +4,7 @@ import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth, db } from '../lib/firebase';
 import { generateDeviceId } from '../lib/utils';
-import { LogIn, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
+import { LogIn, Lock, Mail, AlertCircle, Loader2, Phone } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function Login() {
@@ -172,11 +172,25 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="mt-8 text-center border-t border-white/5 pt-6">
-          <p className="text-slate-500 text-xs font-medium">Não possui uma licença?</p>
-          <Link to="/register" className="text-white hover:text-indigo-400 font-bold uppercase tracking-wider mt-1 block transition-colors text-xs">
-            Criar Registro Seguro
-          </Link>
+        <div className="mt-8 text-center border-t border-white/5 pt-6 space-y-3">
+          <div>
+            <p className="text-slate-500 text-xs font-medium">Não possui uma licença?</p>
+            <Link to="/register" className="text-white hover:text-indigo-400 font-bold uppercase tracking-wider mt-1 block transition-colors text-xs">
+              Criar Registro Seguro
+            </Link>
+          </div>
+
+          <div className="pt-2 border-t border-white/5">
+            <a 
+              href="https://wa.me/5585992862177?text=Olá!%20Gostaria%20de%20adquirir%20acesso%20a%20um%20curso%20ou%20software."
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 text-xs font-bold transition-colors"
+            >
+              <Phone className="w-3.5 h-3.5" />
+              <span>Comprar Cursos / WhatsApp: (85) 99286-2177</span>
+            </a>
+          </div>
         </div>
       </motion.div>
     </div>

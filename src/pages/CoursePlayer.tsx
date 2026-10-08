@@ -12,7 +12,8 @@ import {
   FolderDown,
   Laptop,
   GraduationCap,
-  ExternalLink
+  ExternalLink,
+  Phone
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import ReactPlayer from 'react-player';
@@ -217,6 +218,18 @@ export default function CoursePlayer() {
         </button>
         
         <div className="flex items-center gap-3 lg:gap-4">
+           {/* WhatsApp Suporte & Vendas */}
+           <a 
+             href="https://wa.me/5585992862177?text=Olá!%20Estou%20assistindo%20e%20gostaria%20de%20tirar%20dúvidas%20ou%20adquirir%20mais%20cursos/programas."
+             target="_blank"
+             rel="noopener noreferrer"
+             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider transition-all"
+             title="Falar no WhatsApp: (85) 99286-2177"
+           >
+             <Phone className="w-3 h-3" />
+             <span className="hidden sm:inline">Vendas & Suporte:</span> <span>(85) 99286-2177</span>
+           </a>
+
            <div className="security-badge py-1 text-[8px] lg:text-[10px]">
               <div className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-emerald-500 animate-pulse"></div>
               <span className="truncate max-w-[100px] lg:max-w-none ml-1">🔒 {profile?.deviceId?.substring(0, 8) || '...'}</span>
