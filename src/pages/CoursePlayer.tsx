@@ -7,7 +7,12 @@ import {
   ArrowLeft, 
   Lock,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  Download,
+  FolderDown,
+  Laptop,
+  GraduationCap,
+  ExternalLink
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import ReactPlayer from 'react-player';
@@ -16,6 +21,9 @@ interface Course {
   titulo: string;
   descricao: string;
   videoUrl: string;
+  tipo?: 'curso' | 'software';
+  downloadUrl?: string;
+  downloadLabel?: string;
 }
 
 interface Lesson {
@@ -23,6 +31,8 @@ interface Lesson {
   titulo: string;
   videoUrl: string;
   ordem: number;
+  downloadUrl?: string;
+  downloadLabel?: string;
 }
 
 export default function CoursePlayer() {
@@ -283,11 +293,70 @@ export default function CoursePlayer() {
               )}
            </div>
 
-           <div className="p-4 lg:p-8 max-w-5xl">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
-                 <span className="w-fit bg-indigo-600/20 text-indigo-400 text-[9px] lg:text-[10px] font-bold uppercase px-2 py-1 rounded border border-indigo-500/20 tracking-widest">Aula Ativa</span>
-                 <h1 className="text-xl lg:text-2xl font-bold text-white uppercase tracking-tight line-clamp-2">{activeLesson?.titulo || course?.titulo}</h1>
+            <div className="p-4 lg:p-8 max-w-5xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                 <div>
+                   <div className="flex items-center gap-2 mb-2">
+                      <span className="w-fit bg-indigo-600/20 text-indigo-400 text-[9px] lg:text-[10px] font-bold uppercase px-2 py-1 rounded border border-indigo-500/20 tracking-widest">
+                        Aula Ativa
+                      </span>
+                      {course?.tipo === 'software' ? (
+                        <span className="w-fit bg-emerald-500/10 text-emerald-400 text-[9px] lg:text-[10px] font-bold uppercase px-2 py-1 rounded border border-emerald-500/20 tracking-widest flex items-center gap-1">
+                          <Laptop className="w-3 h-3" /> Programa / Software
+                        </span>
+                      ) : (
+                        <span className="w-fit bg-indigo-500/10 text-indigo-400 text-[9px] lg:text-[10px] font-bold uppercase px-2 py-1 rounded border border-indigo-500/20 tracking-widest flex items-center gap-1">
+                          <GraduationCap className="w-3 h-3" /> Curso
+                        </span>
+                      )}
+                   </div>
+                   <h1 className="text-xl lg:text-2xl font-bold text-white uppercase tracking-tight line-clamp-2">
+                     {activeLesson?.titulo || course?.titulo}
+                   </h1>
+                 </div>
               </div>
+
+              {/* Seção de Downloads (Google Drive / Arquivos) */}
+              {(course?.downloadUrl || activeLesson?.downloadUrl) && (
+                <div className="my-6 p-5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-emerald-900/20 to-transparent border border-emerald-500/30 shadow-xl space-y-3">
+                  <div className="flex items-center gap-2 text-emerald-400">
+                    <FolderDown className="w-5 h-5" />
+                    <span className="text-xs font-black uppercase tracking-widest">Downloads & Arquivos Disponíveis</span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 pt-1">
+                    {/* Download do Produto / Programa Principal */}
+                    {course?.downloadUrl && (
+                      <a
+                        href={course.downloadUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/30 hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>{course.downloadLabel || (course.tipo === 'software' ? 'Baixar Programa / Instalador (Google Drive)' : 'Baixar Arquivos do Curso (Google Drive)')}</span>
+                        <ExternalLink className="w-3 h-3 opacity-70" />
+                      </a>
+                    )}
+
+                    {/* Download específico da Aula Ativa */}
+                    {activeLesson?.downloadUrl && (
+                      <a
+                        href={activeLesson.downloadUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>{activeLesson.downloadLabel || 'Baixar Material desta Aula (Google Drive)'}</span>
+                        <ExternalLink className="w-3 h-3 opacity-70" />
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-400 italic">Clique no botão para abrir o arquivo no Google Drive e iniciar seu download diretamente.</p>
+                </div>
+              )}
+
               <p className="text-slate-400 leading-relaxed font-normal text-xs lg:text-sm max-w-3xl">{course?.descricao}</p>
               
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 lg:gap-4 mt-8 lg:mt-12 pt-6 lg:pt-8 border-t border-white/5">
@@ -310,7 +379,7 @@ export default function CoursePlayer() {
         {/* Sidebar / Playlist */}
         <aside className="w-full lg:w-96 border-l border-white/5 glass-panel flex flex-col h-full z-10">
            <div className="p-5 border-b border-white/5 font-semibold text-white flex justify-between items-center bg-white/5">
-              Conteúdo do Curso <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/10">{lessons.length} Aulas</span>
+              {course?.tipo === 'software' ? 'Aulas do Software' : 'Conteúdo do Curso'} <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/10">{lessons.length} Aulas</span>
            </div>
            
            <div className="flex-1 overflow-y-auto p-2 space-y-1 hide-scrollbar">
@@ -325,10 +394,17 @@ export default function CoursePlayer() {
                     <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 transition-colors'}`}>
                       {idx + 1 < 10 ? `0${idx + 1}` : idx + 1}
                     </div>
-                    <div className="text-xs text-left">
-                      <div className={`font-semibold transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>{lesson.titulo}</div>
-                      <div className={`text-[10px] ${isActive ? 'text-indigo-400 font-medium' : 'text-slate-600'}`}>
-                        {isActive ? 'Reproduzindo agora' : 'Duração automática'}
+                    <div className="text-xs text-left flex-1 min-w-0">
+                      <div className={`font-semibold truncate transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>{lesson.titulo}</div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className={`text-[10px] ${isActive ? 'text-indigo-400 font-medium' : 'text-slate-600'}`}>
+                          {isActive ? 'Reproduzindo agora' : 'Duração automática'}
+                        </span>
+                        {lesson.downloadUrl && (
+                          <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1 rounded flex items-center gap-0.5">
+                            <Download className="w-2.5 h-2.5" /> Arquivo
+                          </span>
+                        )}
                       </div>
                     </div>
                   </button>

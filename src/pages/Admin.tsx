@@ -32,7 +32,13 @@ import {
   Edit2,
   X,
   CreditCard,
-  Menu
+  Menu,
+  Download,
+  FolderDown,
+  Laptop,
+  GraduationCap,
+  ExternalLink,
+  Sparkles
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -54,6 +60,10 @@ interface Course {
   thumbUrl: string;
   categoria: string;
   ordem: number;
+  tipo?: 'curso' | 'software';
+  downloadUrl?: string;
+  downloadLabel?: string;
+  buyUrl?: string;
   createdAt: any;
 }
 
@@ -62,6 +72,8 @@ interface Lesson {
   titulo: string;
   videoUrl: string;
   ordem: number;
+  downloadUrl?: string;
+  downloadLabel?: string;
 }
 
 type Tab = 'users' | 'courses' | 'access' | 'lessons';
@@ -71,6 +83,7 @@ export default function Admin() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [courseFilter, setCourseFilter] = useState<'all' | 'curso' | 'software'>('all');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
@@ -84,7 +97,11 @@ export default function Admin() {
     videoUrl: '',
     thumbUrl: '',
     categoria: 'Geral',
-    ordem: 1
+    ordem: 1,
+    tipo: 'curso' as 'curso' | 'software',
+    downloadUrl: '',
+    downloadLabel: '',
+    buyUrl: ''
   });
 
   // Access State
@@ -99,7 +116,9 @@ export default function Admin() {
   const [lessonForm, setLessonForm] = useState({
     titulo: '',
     videoUrl: '',
-    ordem: 1
+    ordem: 1,
+    downloadUrl: '',
+    downloadLabel: ''
   });
 
   const fetchUsers = async () => {
@@ -210,17 +229,28 @@ export default function Admin() {
       }
       setShowCourseModal(false);
       setEditingCourse(null);
-      setCourseForm({ titulo: '', descricao: '', videoUrl: '', thumbUrl: '', categoria: 'Geral', ordem: 1 });
+      setCourseForm({
+        titulo: '',
+        descricao: '',
+        videoUrl: '',
+        thumbUrl: '',
+        categoria: 'Geral',
+        ordem: 1,
+        tipo: 'curso',
+        downloadUrl: '',
+        downloadLabel: '',
+        buyUrl: ''
+      });
       fetchCourses();
-    } catch (err) { alert("Erro ao salvar curso."); }
+    } catch (err) { alert("Erro ao salvar curso/programa."); }
   };
 
   const handleDeleteCourse = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este curso?")) return;
+    if (!confirm("Tem certeza que deseja excluir este item?")) return;
     try {
       await deleteDoc(doc(db, 'cursos', id));
       fetchCourses();
-    } catch (err) { alert("Erro ao excluir curso."); }
+    } catch (err) { alert("Erro ao excluir curso/programa."); }
   };
 
   const openAccess = async (user: UserProfile) => {
@@ -266,7 +296,7 @@ export default function Admin() {
       }
       setShowLessonModal(false);
       setEditingLesson(null);
-      setLessonForm({ titulo: '', videoUrl: '', ordem: lessons.length + 1 });
+      setLessonForm({ titulo: '', videoUrl: '', ordem: lessons.length + 1, downloadUrl: '', downloadLabel: '' });
       openLessons(selectedCourse);
     } catch (err) { alert("Erro ao salvar aula."); }
   };
@@ -398,13 +428,24 @@ export default function Admin() {
               <button 
                 onClick={() => {
                   setEditingCourse(null);
-                  setCourseForm({ titulo: '', descricao: '', videoUrl: '', thumbUrl: '', categoria: 'Geral', ordem: courses.length + 1 });
+                  setCourseForm({
+                    titulo: '',
+                    descricao: '',
+                    videoUrl: '',
+                    thumbUrl: '',
+                    categoria: 'Geral',
+                    ordem: courses.length + 1,
+                    tipo: courseFilter === 'software' ? 'software' : 'curso',
+                    downloadUrl: '',
+                    downloadLabel: '',
+                    buyUrl: ''
+                  });
                   setShowCourseModal(true);
                 }}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[9px] lg:text-[10px] uppercase tracking-widest px-3 lg:px-4 py-1.5 lg:py-2 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/20 whitespace-nowrap"
               >
                 <Plus className="w-3 h-3" />
-                Novo Curso
+                Novo Item (Curso / Software)
               </button>
             )}
           </div>
@@ -496,64 +537,132 @@ export default function Admin() {
             )}
 
               {activeTab === 'courses' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4 lg:gap-6">
-                   {courses.map(course => (
-                     <div key={course.id} className="glass-panel rounded-xl overflow-hidden shadow-xl border border-white/5 flex flex-col">
+                <div className="space-y-6">
+                  {/* Filtro entre Cursos e Softwares */}
+                  <div className="flex flex-wrap items-center gap-2 border-b border-white/5 pb-4">
+                    <button 
+                      onClick={() => setCourseFilter('all')}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${courseFilter === 'all' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'}`}
+                    >
+                      Todos os Itens ({courses.length})
+                    </button>
+                    <button 
+                      onClick={() => setCourseFilter('curso')}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${courseFilter === 'curso' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'}`}
+                    >
+                      <GraduationCap className="w-3.5 h-3.5" />
+                      🎓 Cursos & Treinamentos ({courses.filter(c => (c.tipo || 'curso') === 'curso').length})
+                    </button>
+                    <button 
+                      onClick={() => setCourseFilter('software')}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${courseFilter === 'software' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'}`}
+                    >
+                      <Laptop className="w-3.5 h-3.5" />
+                      💻 Programas & Softwares ({courses.filter(c => c.tipo === 'software').length})
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4 lg:gap-6">
+                    {courses
+                      .filter(c => courseFilter === 'all' || (c.tipo || 'curso') === courseFilter)
+                      .map(course => (
+                      <div key={course.id} className="glass-panel rounded-xl overflow-hidden shadow-xl border border-white/5 flex flex-col">
                         <div className="aspect-video relative group">
                           <img src={course.thumbUrl || `https://picsum.photos/seed/${course.id}/600/400`} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
                           <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-2">
                               <button 
-                              onClick={() => openLessons(course)}
-                              className="p-3 bg-indigo-600/20 hover:bg-indigo-600 text-white rounded-full transition-all"
-                              title="Gerenciar Aulas"
-                            >
-                                <Database className="w-5 h-5" />
-                             </button>
-                             <button 
-                              onClick={() => {
-                                setEditingCourse(course);
-                                setCourseForm({
-                                  titulo: course.titulo,
-                                  descricao: course.descricao,
-                                  videoUrl: course.videoUrl,
-                                  thumbUrl: course.thumbUrl,
-                                  categoria: course.categoria || 'Geral',
-                                  ordem: course.ordem || 1
-                                });
-                                setShowCourseModal(true);
-                              }}
-                              className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all"
-                            >
-                                <Edit2 className="w-5 h-5" />
-                             </button>
-                             <button 
-                              onClick={() => handleDeleteCourse(course.id)}
-                              className="p-3 bg-red-500/20 hover:bg-red-500 text-white rounded-full transition-all"
-                            >
-                                <Trash2 className="w-5 h-5" />
-                             </button>
+                                onClick={() => openLessons(course)}
+                                className="p-3 bg-indigo-600/20 hover:bg-indigo-600 text-white rounded-full transition-all"
+                                title="Gerenciar Aulas e Downloads"
+                              >
+                                  <Database className="w-5 h-5" />
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  setEditingCourse(course);
+                                  setCourseForm({
+                                    titulo: course.titulo,
+                                    descricao: course.descricao,
+                                    videoUrl: course.videoUrl,
+                                    thumbUrl: course.thumbUrl,
+                                    categoria: course.categoria || 'Geral',
+                                    ordem: course.ordem || 1,
+                                    tipo: course.tipo || 'curso',
+                                    downloadUrl: course.downloadUrl || '',
+                                    downloadLabel: course.downloadLabel || '',
+                                    buyUrl: course.buyUrl || ''
+                                  });
+                                  setShowCourseModal(true);
+                                }}
+                                className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all"
+                                title="Editar Informações"
+                              >
+                                  <Edit2 className="w-5 h-5" />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteCourse(course.id)}
+                                className="p-3 bg-red-500/20 hover:bg-red-500 text-white rounded-full transition-all"
+                                title="Excluir Item"
+                              >
+                                  <Trash2 className="w-5 h-5" />
+                              </button>
+                          </div>
+
+                          {/* Tipo Badge */}
+                          <div className="absolute top-3 left-3 flex flex-wrap gap-1">
+                            {course.tipo === 'software' ? (
+                              <span className="bg-emerald-500/90 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow flex items-center gap-1 backdrop-blur-sm">
+                                <Laptop className="w-3 h-3" /> Programa / Software
+                              </span>
+                            ) : (
+                              <span className="bg-indigo-600/90 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow flex items-center gap-1 backdrop-blur-sm">
+                                <GraduationCap className="w-3 h-3" /> Curso
+                              </span>
+                            )}
                           </div>
                         </div>
                         <div className="p-5 flex-1 flex flex-col">
                            <h3 className="text-white font-bold uppercase tracking-tight text-sm mb-2">{course.titulo}</h3>
-                        <div className="flex items-center gap-3 mt-1">
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
                            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/10">
                              {course.categoria || 'Geral'}
                            </span>
                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                              Ordem: {course.ordem || 1}
                            </span>
+                           {course.downloadUrl && (
+                             <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded flex items-center gap-1">
+                               <Download className="w-2.5 h-2.5" /> Drive Configurado
+                             </span>
+                           )}
+                           {course.buyUrl && (
+                             <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded flex items-center gap-1">
+                               <ExternalLink className="w-2.5 h-2.5" /> Vitrine Link
+                             </span>
+                           )}
                         </div>
                         <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed flex-1 mt-3">{course.descricao}</p>
                            <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
                               <span className="text-[10px] font-mono text-indigo-400">ID: {course.id.substring(0,8)}</span>
-                              <div className="flex items-center gap-1 text-emerald-500 text-[10px] font-bold uppercase tracking-widest">
-                                <Check className="w-3 h-3" /> Pronto
-                              </div>
+                              {course.downloadUrl ? (
+                                <a 
+                                  href={course.downloadUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-[10px] font-bold uppercase tracking-wider hover:underline"
+                                >
+                                  <Download className="w-3 h-3" /> Testar Drive
+                                </a>
+                              ) : (
+                                <div className="flex items-center gap-1 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+                                  Sem download
+                                </div>
+                              )}
                            </div>
                         </div>
                      </div>
-                   ))}
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -587,10 +696,15 @@ export default function Admin() {
                           >
                              <div className="flex items-center gap-3 lg:gap-4">
                                 <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center ${hasAccess ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white/5 text-slate-600 group-hover:text-slate-400 transition-colors'}`}>
-                                   <CreditCard className="w-4 h-4 lg:w-5 lg:h-5" />
+                                   {course.tipo === 'software' ? <Laptop className="w-4 h-4 lg:w-5 lg:h-5 text-emerald-400" /> : <CreditCard className="w-4 h-4 lg:w-5 lg:h-5" />}
                                 </div>
                                 <div>
-                                   <p className={`text-[11px] lg:text-sm font-bold uppercase transition-colors ${hasAccess ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`}>{course.titulo}</p>
+                                   <div className="flex items-center gap-2">
+                                     <p className={`text-[11px] lg:text-sm font-bold uppercase transition-colors ${hasAccess ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`}>{course.titulo}</p>
+                                     <span className={`text-[8px] font-bold uppercase px-1.5 py-0.2 rounded ${course.tipo === 'software' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'}`}>
+                                       {course.tipo === 'software' ? 'Software' : 'Curso'}
+                                     </span>
+                                   </div>
                                    <p className="text-[8px] lg:text-[10px] text-slate-500 uppercase tracking-widest">{hasAccess ? 'Liberado' : 'Bloqueado'}</p>
                                 </div>
                              </div>
@@ -630,7 +744,7 @@ export default function Admin() {
                      <button 
                         onClick={() => {
                           setEditingLesson(null);
-                          setLessonForm({ titulo: '', videoUrl: '', ordem: lessons.length + 1 });
+                          setLessonForm({ titulo: '', videoUrl: '', ordem: lessons.length + 1, downloadUrl: '', downloadLabel: '' });
                           setShowLessonModal(true);
                         }}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/20 w-full sm:w-auto justify-center"
@@ -642,32 +756,60 @@ export default function Admin() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                      {lessons.map(lesson => (
-                       <div key={lesson.id} className="p-5 glass-panel rounded-xl border border-white/5 group hover:border-indigo-500/30 transition-all">
-                          <div className="flex items-center justify-between mb-3">
-                             <div className="w-8 h-8 rounded bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold text-xs border border-indigo-500/10">
-                                {lesson.ordem}
-                             </div>
-                             <div className="flex gap-2">
-                                <button 
-                                  onClick={() => {
-                                    setEditingLesson(lesson);
-                                    setLessonForm({ titulo: lesson.titulo, videoUrl: lesson.videoUrl, ordem: lesson.ordem });
-                                    setShowLessonModal(true);
-                                  }}
-                                  className="p-2 text-slate-500 hover:text-white transition-colors"
-                                >
-                                  <Edit2 className="w-3.5 h-3.5" />
-                                </button>
-                                <button 
-                                  onClick={() => handleDeleteLesson(lesson.id)}
-                                  className="p-2 text-slate-500 hover:text-red-500 transition-colors"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                             </div>
+                       <div key={lesson.id} className="p-5 glass-panel rounded-xl border border-white/5 group hover:border-indigo-500/30 transition-all flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                               <div className="w-8 h-8 rounded bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold text-xs border border-indigo-500/10">
+                                  {lesson.ordem}
+                                </div>
+                               <div className="flex gap-2">
+                                  <button 
+                                    onClick={() => {
+                                      setEditingLesson(lesson);
+                                      setLessonForm({
+                                        titulo: lesson.titulo,
+                                        videoUrl: lesson.videoUrl,
+                                        ordem: lesson.ordem,
+                                        downloadUrl: lesson.downloadUrl || '',
+                                        downloadLabel: lesson.downloadLabel || ''
+                                      });
+                                      setShowLessonModal(true);
+                                    }}
+                                    className="p-2 text-slate-500 hover:text-white transition-colors"
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteLesson(lesson.id)}
+                                    className="p-2 text-slate-500 hover:text-red-500 transition-colors"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                               </div>
+                            </div>
+                            <h4 className="text-white font-bold text-sm uppercase tracking-tight mb-1 truncate">{lesson.titulo}</h4>
+                            <p className="text-[10px] font-mono text-slate-600 truncate mb-2">{lesson.videoUrl}</p>
                           </div>
-                          <h4 className="text-white font-bold text-sm uppercase tracking-tight mb-1 truncate">{lesson.titulo}</h4>
-                          <p className="text-[10px] font-mono text-slate-600 truncate">{lesson.videoUrl}</p>
+                          
+                          {lesson.downloadUrl ? (
+                            <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                              <span className="text-[9px] font-bold text-emerald-400 flex items-center gap-1">
+                                <Download className="w-2.5 h-2.5" /> Arquivos Configurados
+                              </span>
+                              <a 
+                                href={lesson.downloadUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-[9px] text-indigo-400 hover:underline flex items-center gap-0.5"
+                              >
+                                Testar Drive <ExternalLink className="w-2 h-2" />
+                              </a>
+                            </div>
+                          ) : (
+                            <div className="pt-2 border-t border-white/5 text-[9px] text-slate-600 italic">
+                              Sem arquivo de download
+                            </div>
+                          )}
                        </div>
                      ))}
                      {lessons.length === 0 && (
@@ -699,14 +841,44 @@ export default function Admin() {
                 </div>
                 <form onSubmit={handleSaveCourse} className="p-8 space-y-6">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest block">Tipo de Conteúdo</label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setCourseForm({ ...courseForm, tipo: 'curso' })}
+                            className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                              courseForm.tipo === 'curso'
+                                ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30'
+                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            <GraduationCap className="w-4 h-4" />
+                            🎓 Curso / Treinamento
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCourseForm({ ...courseForm, tipo: 'software' })}
+                            className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                              courseForm.tipo === 'software'
+                                ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-600/30'
+                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            <Laptop className="w-4 h-4" />
+                            💻 Programa / Software
+                          </button>
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
-                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Título do Curso</label>
+                        <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Título do Item</label>
                         <input 
                           required
                           value={courseForm.titulo}
                           onChange={(e) => setCourseForm({...courseForm, titulo: e.target.value})}
                           className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
-                          placeholder="Ex: Domina Canva Pro"
+                          placeholder={courseForm.tipo === 'software' ? "Ex: Clonagem de Voz IA Pro" : "Ex: Criação de Comerciais"}
                         />
                       </div>
                       <div className="space-y-2">
@@ -729,7 +901,7 @@ export default function Admin() {
                           value={courseForm.categoria}
                           onChange={(e) => setCourseForm({...courseForm, categoria: e.target.value})}
                           className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
-                          placeholder="Ex: Design, Marketing, etc"
+                          placeholder={courseForm.tipo === 'software' ? "Ex: Softwares & IA" : "Ex: Design, Marketing, etc"}
                         />
                       </div>
                       <div className="space-y-2">
@@ -738,9 +910,54 @@ export default function Admin() {
                           type="number"
                           required
                           value={courseForm.ordem}
-                          onChange={(e) => setCourseForm({...courseForm, ordem: parseInt(e.target.value)})}
+                          onChange={(e) => setCourseForm({...courseForm, ordem: parseInt(e.target.value) || 1})}
                           className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
                         />
+                      </div>
+                   </div>
+
+                   {/* Link Google Drive para Download */}
+                   <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
+                      <div className="flex items-center gap-2 text-emerald-400">
+                        <Download className="w-4 h-4" />
+                        <span className="text-xs font-bold uppercase tracking-wider">Download de Arquivo / Programa (Google Drive)</span>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Link do Google Drive (ou link direto de download)</label>
+                        <input 
+                          value={courseForm.downloadUrl}
+                          onChange={(e) => setCourseForm({...courseForm, downloadUrl: e.target.value})}
+                          className="w-full bg-black/40 border border-emerald-500/30 p-3 rounded-xl text-white focus:border-emerald-500 outline-none transition-all text-sm font-mono placeholder:text-slate-600"
+                          placeholder="https://drive.google.com/file/d/... ou link de download"
+                        />
+                        <p className="text-[10px] text-slate-500 italic">O aluno verá um botão destacado para baixar o arquivo/programa diretamente com 1 clique.</p>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Texto do Botão de Download (Opcional)</label>
+                        <input 
+                          value={courseForm.downloadLabel}
+                          onChange={(e) => setCourseForm({...courseForm, downloadLabel: e.target.value})}
+                          className="w-full bg-black/40 border border-white/10 p-3 rounded-xl text-white focus:border-emerald-500 outline-none transition-all text-sm placeholder:text-slate-600"
+                          placeholder={courseForm.tipo === 'software' ? "Ex: Baixar Instalador do Programa (Google Drive)" : "Ex: Baixar Arquivos do Treinamento"}
+                        />
+                      </div>
+                   </div>
+
+                   {/* Link de Venda / WhatsApp para Vitrine */}
+                   <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-3">
+                      <div className="flex items-center gap-2 text-amber-400">
+                        <ExternalLink className="w-4 h-4" />
+                        <span className="text-xs font-bold uppercase tracking-wider">Link de Venda / WhatsApp (Vitrine)</span>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Link de Compra / WhatsApp (Para quem não adquiriu ainda)</label>
+                        <input 
+                          value={courseForm.buyUrl}
+                          onChange={(e) => setCourseForm({...courseForm, buyUrl: e.target.value})}
+                          className="w-full bg-black/40 border border-amber-500/30 p-3 rounded-xl text-white focus:border-amber-500 outline-none transition-all text-sm font-mono placeholder:text-slate-600"
+                          placeholder="https://wa.me/5511999999999?text=Quero%20adquirir... ou checkout"
+                        />
+                        <p className="text-[10px] text-slate-500 italic">Se o aluno não tiver este produto liberado, ele poderá clicar em 'Adquirir / Saiba Mais' que abrirá este link.</p>
                       </div>
                    </div>
 
@@ -751,12 +968,12 @@ export default function Admin() {
                         value={courseForm.descricao}
                         onChange={(e) => setCourseForm({...courseForm, descricao: e.target.value})}
                         className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm min-h-[100px]"
-                        placeholder="Conte um pouco sobre o curso..."
+                        placeholder="Conte um pouco sobre o curso ou software..."
                       />
                    </div>
 
                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">URL da Thumbnail (Imagem)</label>
+                      <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">URL da Thumbnail (Imagem de Capa)</label>
                       <input 
                         value={courseForm.thumbUrl}
                         onChange={(e) => setCourseForm({...courseForm, thumbUrl: e.target.value})}
@@ -777,7 +994,7 @@ export default function Admin() {
                         type="submit"
                         className="flex-2 py-4 bg-indigo-600 text-white font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20"
                       >
-                        {editingCourse ? 'Salvar Alterações' : 'Criar Treinamento'}
+                        {editingCourse ? 'Salvar Alterações' : 'Criar Item'}
                       </button>
                    </div>
                 </form>
@@ -828,9 +1045,35 @@ export default function Admin() {
                         type="number"
                         required
                         value={lessonForm.ordem}
-                        onChange={(e) => setLessonForm({...lessonForm, ordem: parseInt(e.target.value)})}
+                        onChange={(e) => setLessonForm({...lessonForm, ordem: parseInt(e.target.value) || 1})}
                         className="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-white focus:border-indigo-500 outline-none transition-all text-sm"
                       />
+                   </div>
+
+                   {/* Link Google Drive para Download dos arquivos desta aula */}
+                   <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-3">
+                      <div className="flex items-center gap-2 text-emerald-400">
+                        <Download className="w-4 h-4" />
+                        <span className="text-xs font-bold uppercase tracking-wider">Download de Arquivo desta Aula (Google Drive)</span>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Link do Google Drive (Opcional)</label>
+                        <input 
+                          value={lessonForm.downloadUrl}
+                          onChange={(e) => setLessonForm({...lessonForm, downloadUrl: e.target.value})}
+                          className="w-full bg-black/40 border border-emerald-500/30 p-3 rounded-xl text-white focus:border-emerald-500 outline-none transition-all text-sm font-mono placeholder:text-slate-600"
+                          placeholder="https://drive.google.com/file/d/... ou link direto"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Texto do Botão (Opcional)</label>
+                        <input 
+                          value={lessonForm.downloadLabel}
+                          onChange={(e) => setLessonForm({...lessonForm, downloadLabel: e.target.value})}
+                          className="w-full bg-black/40 border border-white/10 p-3 rounded-xl text-white focus:border-emerald-500 outline-none transition-all text-sm placeholder:text-slate-600"
+                          placeholder="Ex: Baixar Arquivos desta Aula"
+                        />
+                      </div>
                    </div>
 
                    <div className="pt-6 flex gap-3">

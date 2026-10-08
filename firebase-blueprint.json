@@ -16,26 +16,32 @@
       "required": ["email", "ativo"]
     },
     "Curso": {
-      "title": "Course",
-      "description": "Information about available courses",
+      "title": "Course or Software Product",
+      "description": "Information about available courses and software products",
       "type": "object",
       "properties": {
         "titulo": { "type": "string" },
         "descricao": { "type": "string" },
         "thumbUrl": { "type": "string" },
         "videoUrl": { "type": "string", "description": "Path in Storage or external URL" },
+        "tipo": { "type": "string", "enum": ["curso", "software"], "description": "Type of product: curso or software" },
+        "downloadUrl": { "type": "string", "description": "Google Drive or direct download URL for files or software" },
+        "downloadLabel": { "type": "string", "description": "Custom label for the download button" },
+        "buyUrl": { "type": "string", "description": "Direct WhatsApp or sales page link for locked visitors" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["titulo"]
     },
     "Aula": {
       "title": "Lesson",
-      "description": "Individual lessons within a course",
+      "description": "Individual lessons within a course or software setup guide",
       "type": "object",
       "properties": {
         "titulo": { "type": "string" },
         "videoUrl": { "type": "string" },
         "ordem": { "type": "number" },
+        "downloadUrl": { "type": "string", "description": "Google Drive or file download link for this specific lesson" },
+        "downloadLabel": { "type": "string", "description": "Custom label for lesson download button" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["titulo", "videoUrl", "ordem"]
