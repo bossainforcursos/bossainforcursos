@@ -300,8 +300,27 @@ export default function CoursePlayer() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-slate-900 via-[#0d1017] to-black border-b border-white/5">
+                  <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-4 shadow-xl shadow-indigo-600/10">
+                    {course?.tipo === 'software' ? <Laptop className="w-8 h-8 text-emerald-400" /> : <GraduationCap className="w-8 h-8 text-indigo-400" />}
+                  </div>
+                  <h3 className="text-lg lg:text-xl font-black text-white uppercase tracking-tight mb-2 max-w-xl">
+                    {course?.titulo || 'Conteúdo Liberado'}
+                  </h3>
+                  <p className="text-xs text-slate-400 max-w-md mb-6 leading-relaxed">
+                    {course?.descricao || 'Este produto está liberado para o seu usuário. Baixe os arquivos e programas abaixo.'}
+                  </p>
+                  {course?.downloadUrl && (
+                    <a
+                      href={course.downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-xl shadow-emerald-600/30 transition-all hover:scale-105 active:scale-95"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>{course.downloadLabel || 'Baixar Arquivos / Programa (Google Drive)'}</span>
+                    </a>
+                  )}
                 </div>
               )}
            </div>

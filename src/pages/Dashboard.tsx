@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { collection, query, getDocs, orderBy, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../hooks/useAuth';
@@ -25,7 +25,8 @@ import {
   FolderDown,
   Layers,
   Check,
-  Phone
+  Phone,
+  Tag
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -50,9 +51,20 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'curso' | 'software' | 'mine'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [lockedModalCourse, setLockedModalCourse] = useState<Course | null>(null);
   const navigate = useNavigate();
+
+  // Categorias disponíveis calculadas a partir dos cursos cadastrados
+  const availableCategories = useMemo(() => {
+    const cats = new Set<string>();
+    courses.forEach(c => {
+      const cat = (c.categoria || '').trim();
+      if (cat) cats.add(cat);
+    });
+    return Array.from(cats).sort((a, b) => a.localeCompare(b));
+  }, [courses]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,6 +127,11 @@ export default function Dashboard() {
     if (activeTab === 'curso' && (c.tipo || 'curso') !== 'curso') return false;
     if (activeTab === 'software' && c.tipo !== 'software') return false;
     if (activeTab === 'mine' && !userAccess.includes(c.id) && !profile?.isAdmin) return false;
+
+    // Category filter
+    if (selectedCategory !== 'all') {
+      if ((c.categoria || '').trim().toLowerCase() !== selectedCategory.toLowerCase()) return false;
+    }
 
     // Search query
     if (searchQuery.trim()) {
@@ -362,173 +379,220 @@ export default function Dashboard() {
               </p>
             </div>
 
-            {/* Quick Filter Buttons */}
-            <div className="flex flex-wrap items-center gap-2">
-              <button 
-                onClick={() => setActiveTab('all')}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
-                  activeTab === 'all' ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "bg-white/5 text-slate-400 hover:text-white"
-                )}
-              >
-                Todos ({courses.length})
-              </button>
-              <button 
-                onClick={() => setActiveTab('curso')}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all",
-                  activeTab === 'curso' ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "bg-white/5 text-slate-400 hover:text-white"
-                )}
-              >
-                <GraduationCap className="w-3.5 h-3.5" />
-                Cursos ({courses.filter(c => (c.tipo || 'curso') === 'curso').length})
-              </button>
-              <button 
-                onClick={() => setActiveTab('software')}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all",
-                  activeTab === 'software' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "bg-white/5 text-slate-400 hover:text-white"
-                )}
-              >
-                <Laptop className="w-3.5 h-3.5 text-emerald-400" />
-                Softwares ({courses.filter(c => c.tipo === 'software').length})
-              </button>
+            {/* Quick Filter Buttons & Category Pills */}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <button 
+                  onClick={() => { setActiveTab('all'); setSelectedCategory('all'); }}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
+                    activeTab === 'all' && selectedCategory === 'all' ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "bg-white/5 text-slate-400 hover:text-white"
+                  )}
+                >
+                  Todos ({courses.length})
+                </button>
+                <button 
+                  onClick={() => setActiveTab('curso')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all",
+                    activeTab === 'curso' ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "bg-white/5 text-slate-400 hover:text-white"
+                  )}
+                >
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  Cursos ({courses.filter(c => (c.tipo || 'curso') === 'curso').length})
+                </button>
+                <button 
+                  onClick={() => setActiveTab('software')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all",
+                    activeTab === 'software' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "bg-white/5 text-slate-400 hover:text-white"
+                  )}
+                >
+                  <Laptop className="w-3.5 h-3.5 text-emerald-400" />
+                  Softwares ({courses.filter(c => c.tipo === 'software').length})
+                </button>
+              </div>
+
+              {/* Filtro por Categorias (Cursos/Programas lado a lado) */}
+              {availableCategories.length > 0 && (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 hide-scrollbar">
+                  <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 mr-1 shrink-0">
+                    <Tag className="w-3 h-3 text-indigo-400" />
+                    <span>Categoria:</span>
+                  </div>
+                  <button
+                    onClick={() => setSelectedCategory('all')}
+                    className={cn(
+                      "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap shrink-0",
+                      selectedCategory === 'all'
+                        ? "bg-indigo-600/90 text-white shadow-sm shadow-indigo-600/30"
+                        : "bg-white/5 text-slate-400 hover:text-white hover:bg-white/10"
+                    )}
+                  >
+                    Todas
+                  </button>
+                  {availableCategories.map(cat => {
+                    const count = courses.filter(c => (c.categoria || '').trim().toLowerCase() === cat.toLowerCase()).length;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(selectedCategory.toLowerCase() === cat.toLowerCase() ? 'all' : cat)}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5",
+                          selectedCategory.toLowerCase() === cat.toLowerCase()
+                            ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/40 border border-indigo-400/30"
+                            : "bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 border border-white/5"
+                        )}
+                      >
+                        <span>{cat}</span>
+                        <span className="text-[9px] bg-black/40 px-1.5 py-0.2 rounded-full font-mono">{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="aspect-video bg-white/5 rounded-xl animate-pulse border border-white/5"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className="aspect-video bg-white/5 rounded-2xl animate-pulse border border-white/5"></div>
               ))}
             </div>
           ) : filteredCourses.length > 0 ? (
-            <div className="space-y-12">
-              {Object.entries(
-                filteredCourses.reduce((acc, c) => {
-                  const cat = c.categoria || 'Geral';
-                  if (!acc[cat]) acc[cat] = [];
-                  acc[cat].push(c);
-                  return acc;
-                }, {} as Record<string, Course[]>)
-              ).map(([categoria, items]) => (
-                <div key={categoria} className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <h3 className="text-sm font-black uppercase tracking-[0.3em] text-indigo-500 bg-indigo-500/5 px-4 py-1 rounded border border-indigo-500/10 inline-block">
-                      {categoria}
-                    </h3>
-                    <div className="flex-1 h-[1px] bg-white/5"></div>
-                  </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+              {filteredCourses.map((course) => {
+                const hasAccess = userAccess.includes(course.id) || profile?.isAdmin;
+                const isSoftware = course.tipo === 'software';
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {items.map((course) => {
-                      const hasAccess = userAccess.includes(course.id) || profile?.isAdmin;
-                      const isSoftware = course.tipo === 'software';
-
-                      return (
-                        <motion.div 
-                          key={course.id}
-                          whileHover={{ y: hasAccess ? -5 : -2 }}
-                          onClick={() => handleCourseClick(course)}
+                return (
+                  <motion.div 
+                    key={course.id}
+                    whileHover={{ y: -5 }}
+                    onClick={() => handleCourseClick(course)}
+                    className={cn(
+                      "glass-panel p-3 rounded-2xl group cursor-pointer shadow-xl transition-all border flex flex-col justify-between hover:shadow-2xl relative",
+                      hasAccess 
+                        ? isSoftware
+                          ? "hover:border-emerald-500/50 border-white/5 bg-[#121620]"
+                          : "hover:border-indigo-500/50 border-white/5 bg-[#121620]"
+                        : "border-white/5 opacity-85 hover:opacity-100 hover:border-amber-500/40 bg-[#0e1017]"
+                    )}
+                  >
+                    <div>
+                      <div className="relative aspect-video rounded-xl overflow-hidden bg-black/40 shadow-inner">
+                        <img 
+                          src={course.thumbUrl || `https://picsum.photos/seed/${course.id}/600/400`} 
+                          alt={course.titulo}
                           className={cn(
-                            "glass-panel p-2.5 rounded-xl group cursor-pointer shadow-xl transition-all border flex flex-col justify-between",
-                            hasAccess 
-                              ? isSoftware
-                                ? "hover:border-emerald-500/40 border-white/5"
-                                : "hover:border-indigo-500/30 border-white/5"
-                              : "border-white/5 opacity-80 hover:opacity-100 hover:border-amber-500/30"
+                            "w-full h-full object-cover transition-all duration-500 group-hover:scale-105",
+                            hasAccess ? "brightness-100" : "grayscale opacity-80"
                           )}
-                        >
-                          <div>
-                            <div className="relative aspect-video rounded-lg overflow-hidden">
-                              <img 
-                                src={course.thumbUrl || `https://picsum.photos/seed/${course.id}/600/400`} 
-                                alt={course.titulo}
-                                className={cn(
-                                  "w-full h-full object-cover transition-all duration-500",
-                                  hasAccess ? "grayscale group-hover:grayscale-0" : "grayscale"
-                                )}
-                              />
+                        />
 
-                              {/* Badges no topo da imagem */}
-                              <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-                                {isSoftware ? (
-                                  <span className="bg-emerald-600/95 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow flex items-center gap-1 backdrop-blur-sm">
-                                    <Laptop className="w-2.5 h-2.5" /> Software
-                                  </span>
-                                ) : (
-                                  <span className="bg-indigo-600/95 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow flex items-center gap-1 backdrop-blur-sm">
-                                    <GraduationCap className="w-2.5 h-2.5" /> Curso
-                                  </span>
-                                )}
-                              </div>
+                        {/* Badges no topo da imagem */}
+                        <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-10">
+                          {isSoftware ? (
+                            <span className="bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shadow-md flex items-center gap-1 backdrop-blur-sm">
+                              <Laptop className="w-2.5 h-2.5" /> Software
+                            </span>
+                          ) : (
+                            <span className="bg-indigo-600 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shadow-md flex items-center gap-1 backdrop-blur-sm">
+                              <GraduationCap className="w-2.5 h-2.5" /> Curso
+                            </span>
+                          )}
 
-                              {/* Badge de Download se tiver link do Drive */}
-                              {course.downloadUrl && (
-                                <div className="absolute top-2 right-2">
-                                  <span className="bg-black/80 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shadow flex items-center gap-1 backdrop-blur-sm">
-                                    <Download className="w-2.5 h-2.5" /> Arquivos
-                                  </span>
-                                </div>
-                              )}
+                          {course.categoria && (
+                            <span className="bg-black/85 text-indigo-300 border border-indigo-500/30 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shadow-md backdrop-blur-sm">
+                              {course.categoria}
+                            </span>
+                          )}
+                        </div>
 
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[2px]">
-                                 {hasAccess ? (
-                                   <div className={cn(
-                                     "w-12 h-12 rounded-full flex items-center justify-center text-white shadow-xl",
-                                     isSoftware ? "bg-emerald-600 shadow-emerald-600/40" : "bg-indigo-600 shadow-indigo-600/40"
-                                   )}>
-                                      <Play className="w-6 h-6 fill-current" />
-                                   </div>
-                                 ) : (
-                                   <div className="px-4 py-2 rounded-xl bg-amber-500/90 text-black font-black text-xs uppercase tracking-wider shadow-2xl flex items-center gap-1.5 backdrop-blur-sm">
-                                      <Lock className="w-4 h-4" /> Conhecer / Adquirir
-                                   </div>
-                                 )}
-                              </div>
-                            </div>
-
-                            <div className="p-3">
-                              <div className="flex items-center justify-between mb-1">
-                                 <h4 className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors uppercase tracking-tight truncate">
-                                   {course.titulo}
-                                 </h4>
-                                 {!hasAccess && <Lock className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 ml-1" />}
-                              </div>
-                              <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{course.descricao}</p>
-                            </div>
+                        {/* Badge de Download se tiver link do Drive */}
+                        {course.downloadUrl && (
+                          <div className="absolute top-2 right-2 z-10">
+                            <span className="bg-black/85 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md shadow-md flex items-center gap-1 backdrop-blur-sm">
+                              <Download className="w-2.5 h-2.5" /> Arquivos
+                            </span>
                           </div>
+                        )}
 
-                          {/* Rodapé do Card */}
-                          <div className="px-3 pb-2 pt-2 border-t border-white/5 flex items-center justify-between">
-                            {hasAccess ? (
-                              <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
-                                <Check className="w-3 h-3" /> Acesso Liberado
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1 text-[10px] text-amber-400 font-bold uppercase tracking-wider">
-                                <Lock className="w-3 h-3" /> Não Adquirido
-                              </div>
-                            )}
+                        {/* Hover Overlay com Botão para Clicar e Ver */}
+                        <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all backdrop-blur-[2px]">
+                           {hasAccess ? (
+                             <div className={cn(
+                               "px-4 py-2 rounded-xl text-white font-black text-xs uppercase tracking-wider shadow-2xl flex items-center gap-2 transform translate-y-1 group-hover:translate-y-0 transition-transform",
+                               isSoftware ? "bg-emerald-600 shadow-emerald-600/40" : "bg-indigo-600 shadow-indigo-600/40"
+                             )}>
+                                <Play className="w-4 h-4 fill-current" />
+                                <span>{isSoftware ? 'Abrir Programa' : 'Assistir Aula'}</span>
+                             </div>
+                           ) : (
+                             <div className="px-4 py-2 rounded-xl bg-amber-500 text-black font-black text-xs uppercase tracking-wider shadow-2xl flex items-center gap-1.5 backdrop-blur-sm transform translate-y-1 group-hover:translate-y-0 transition-transform">
+                                <Lock className="w-4 h-4" /> Conhecer / Adquirir
+                             </div>
+                           )}
+                        </div>
+                      </div>
 
-                            {hasAccess && course.downloadUrl && (
-                              <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
-                                <Download className="w-3 h-3 text-emerald-400" /> Download
-                              </span>
-                            )}
+                      <div className="p-3">
+                        <div className="flex items-center justify-between mb-1">
+                           <h4 className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors uppercase tracking-tight truncate">
+                             {course.titulo}
+                           </h4>
+                           {!hasAccess && <Lock className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 ml-1" />}
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">{course.descricao}</p>
+                      </div>
+                    </div>
 
-                            {!hasAccess && (
-                              <span className="text-[10px] text-amber-300 font-bold uppercase hover:underline">
-                                Saiba Mais &rarr;
-                              </span>
-                            )}
+                    {/* Rodapé do Card com Ação "Clique para Ver" */}
+                    <div className="px-3 pb-2 pt-2 border-t border-white/5 flex flex-col gap-2">
+                      <div className="flex items-center justify-between text-[10px]">
+                        {hasAccess ? (
+                          <div className="flex items-center gap-1 text-emerald-400 font-bold uppercase tracking-wider">
+                            <Check className="w-3 h-3" /> Acesso Liberado
                           </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+                        ) : (
+                          <div className="flex items-center gap-1 text-amber-400 font-bold uppercase tracking-wider">
+                            <Lock className="w-3 h-3" /> Não Adquirido
+                          </div>
+                        )}
+
+                        {hasAccess && course.downloadUrl && (
+                          <span className="text-[10px] text-emerald-300 font-semibold flex items-center gap-1 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                            <Download className="w-2.5 h-2.5 text-emerald-400" /> Download
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Botão de Ação Direto: Clicar para Ver */}
+                      <div className={cn(
+                        "w-full py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm",
+                        hasAccess 
+                          ? isSoftware
+                            ? "bg-emerald-600/20 group-hover:bg-emerald-600 border border-emerald-500/30 text-emerald-300 group-hover:text-white"
+                            : "bg-indigo-600/20 group-hover:bg-indigo-600 border border-indigo-500/30 text-indigo-300 group-hover:text-white"
+                          : "bg-amber-500/10 group-hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 group-hover:text-amber-300"
+                      )}>
+                        {hasAccess ? (
+                          <>
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                            <span>{isSoftware ? 'Acessar Programa' : 'Assistir Curso'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>Clique para Adquirir</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           ) : (
             <div className="py-20 text-center glass-panel rounded-2xl border-white/5 border-dashed">
